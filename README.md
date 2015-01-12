@@ -15,6 +15,13 @@ Thing.js is an Agent Framework written in JavaScript for building Internet of Th
 ```html
 <script type="text/javascript" src="https://thingjs.github.io/cdn/lib/thingjs-agent-0.1.0-withasync.min.js"></script>
 ```
+##### Node.js
+```sh
+npm install thingjs-agent
+```
+```javascript
+var agent = require('thingjs-agent');
+```
 
 ## Quick Example
 ```javascript
