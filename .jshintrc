@@ -1,0 +1,15 @@
+{
+
+    "strict": true,
+    "node": true,
+
+    "indent": 2,
+    "expr": true,
+    "laxbreak": true,
+    "eqeqeq": true,
+    "immed": true,
+    "newcap": true,
+
+    "maxdepth": 4
+
+}
