@@ -1,5 +1,7 @@
 ![thing.js: Internet of Wild Things](https://thingjs.github.io/cdn/images/thingjs-header-850-blue.png)
 
+[![Build Status](https://travis-ci.org/thingjs/agent.svg?branch=master)](https://travis-ci.org/thingjs/agent)
+
 Thing.js is an Agent Framework written in JavaScript for building Internet of Things applications. The framework supports Node.js, the Browser, Tessel, Phonegap, JavaScriptCore and other Mobile Containers.
 
 ## Features
