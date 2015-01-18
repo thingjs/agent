@@ -1,6 +1,6 @@
 ![thing.js: Internet of Wild Things](https://thingjs.github.io/cdn/images/thingjs-header-850-blue.png)
 
-Thing.js is an Agent Framework written in JavaScript for building Internet of Things Applications. The Framework supports Node.js, the Browser, Tessel, JavaScriptCore and other Mobile Containers.
+Thing.js is an Agent Framework written in JavaScript for building Internet of Things applications. The framework supports Node.js, the Browser, Tessel, Phonegap, JavaScriptCore and other Mobile Containers.
 
 ## Features
 
@@ -29,7 +29,7 @@ agent('abstract smith', {
     setup: function(cb) {
         this.$super(cb);
         
-        this.quote = "As you can see, we've had our eye on you for some time now, Mr. Anderson."
+        this.quote = "As you can see, we've had our eye on you for some time now, Mr. Anderson.";
 
         this.addBehaviour(
             '@passive',
@@ -74,7 +74,7 @@ agent('MyObject', {
 ##### Behaviour Declaration
 ```javascript
 agent('MyAgent', {
-    'setup': function(cb) {
+    setup: function(cb) {
         this.$super(cb);
         
         this.addBehaviour('MyObject', {
@@ -669,6 +669,11 @@ agent('MyQueue')
 //          44
     
 ```
+---
+
+## FAQ
+#### Why is my Agent taken down shortly after setup?
+Agents should be declared @passive or have one or more behaviours. The framework is designed to automatically dereference objects not doing anything.
 
 ---
 
