@@ -1,10 +1,14 @@
 'use strict';
 
-var agent = require('../lib/thingjs-agent.js');
+if (typeof agent === 'undefined') {
 
-process.on('uncaughtException', function(err) {
-    console.error(err.stack);
-});
+    var agent = require('../bootstrap/node.js');
+
+    process.on('uncaughtException', function(err) {
+        console.error(err.stack);
+    });
+
+}
 
 exports['agent'] = function(test) {
     test.expect(2);
@@ -248,10 +252,9 @@ exports['implements'] = function(test) {
                     'I implements H', {
                         method: function($cb) {
                             test.ok(true, 'I.method');
-                            var interfaces = this.getInterfaces();
                             test.deepEqual(
                                 this.getInterfaces(),
-                                ['Behaviour', this.$id, this.getSource(), 'H', 'I'], 'getInterfaces() == ["Behaviour", "H", "I"]'
+                                ['Behaviour', 'parent:' + this.$parent.$id, 'owner:' + this.$owner.$id, this.$id, this.getSource(), 'H', 'I'], 'getInterfaces() == ["Behaviour", "H", "I"]'
                             );
                             this.block($cb);
                         }
@@ -866,40 +869,85 @@ exports['Singleton Unref'] = function(test) {
 
 };
 
+exports['filters'] = function(test) {
+    test.expect(7);
+
+    agent(
+        '@passive', 
+        'implements CC', {
+
+            method: function($cb) {
+                test.ok(true, 'method');
+                $cb();
+            }
+
+        }
+    );
+
+    agent(
+        '@passive', 
+        'implements CC', {
+
+            method: function($cb) {
+                test.ok(true, 'method');
+                $cb();
+            },
+
+            done: function($cb) {
+                test.ok(true, 'done');
+                test.done();
+                $cb();
+            }
+
+        }
+    );
+
+    agent('@select CC')
+        .first('method')()
+        .last('method')()
+        .all('method')()
+        ('method')()
+        ('done')()
+        ;
+
+};
+
 exports['Waker'] = function(test) {
     test.expect(2);
 
     agent('extends Heartbeat');
 
-    agent(
-        {
-            setup: function(cb) {
-                this.$super(cb);
+    agent({
 
-                this.counter = 0;
+        setup: function(cb) {
+            this.$super(cb);
 
-                this.addBehaviour(
-                    'extends Waker', {
+            this.counter = 0;
 
-                        wake: function(cb) {
-                            test.ok(true, 'wake');
+            this.addBehaviour(
+                'extends Waker', {
 
-                            if (++this.$owner.counter < 2) 
-                                this.reset();
-                            else {
-                                agent('Heartbeat')('destroy')();
-                                test.done();
-                            }
+                    wake: function(cb) {
+                        test.ok(true, 'wake');
 
-                            this.$super(cb);
-                        }
-
+                        if (++this.$owner.counter < 2) 
+                            this.reset();
+                
+                        this.$super(cb);
                     }
-                )
 
-            }
+                }
+            );
+
+        },
+
+        takedown: function(cb) {
+            agent('Heartbeat')('destroy')();
+            this.$super(cb);
+            test.done();
         }
-    );
+
+    });
 
 };
 
@@ -948,45 +996,175 @@ exports['@singleton Waker'] = function(test) {
 
 };
 
-exports['filters'] = function(test) {
-    test.expect(7);
+exports['Mqtt Actuator Sensor'] = function(test) {
+    test.expect(12);
+
+    var myTopic = Math.random().toString(36).slice(2);
 
     agent(
-        '@passive', 
-        'implements CC', {
+        '@host test.thingjs.org',
+        ($thing.usePaho) ? '@port 8080' : '',
+        'extends Mqtt', {
 
-            method: function($cb) {
-                test.ok(true, 'method');
-                $cb();
-            }
+            setup: function(cb) {
+                this.$super(cb);
 
-        }
-    );
+                this.addBehaviour('$ extends Actuator', myTopic);
 
-    agent(
-        '@passive', 
-        'implements CC', {
+                this.addBehaviour(
+                    '$ extends Sensor', myTopic, 
+                    '@flow onMessage', {
+                        onMessage: function(message, $cb) {
+                            test.ok(message.toString() === 'Hello World!', 'onMessage');
+                            agent('Container')('destroy')($cb);
+                        }
+                    }
+                );
 
-            method: function($cb) {
-                test.ok(true, 'method');
-                $cb();
             },
 
-            done: function($cb) {
-                test.ok(true, 'done');
+            takedown: function(cb) {
+                this.$super(cb);
+                
                 test.done();
-                $cb();
+            },
+
+            onError: function(err) {
+                test.ok(false, 'onError');
+                
+                this.$super(err);
+            },
+
+            onConnect: function() {
+                test.ok(true, 'onConnect');
+                
+                this.$super();
+            },
+
+            onDisconnect: function() {
+                test.ok(true, 'onDisconnect');
+                
+                this.$super();
+            },
+
+            doSendMessage: function(topic, message) {
+                test.ok(true, 'doSendMessage');
+                test.ok(topic === myTopic, 'doSendMessage topic');
+                test.ok(message.toString() === 'Hello World!', 'doSendMessage message');
+                
+                this.$super(topic, message);
+            },
+
+            onMessageArrived: function(topic, message) {
+                test.ok(true, 'onMessageArrived');
+                test.ok(topic === myTopic, 'onMessageArrived topic');
+                test.ok(message.toString() === 'Hello World!', 'onMessageArrived message');
+                
+                this.$super(topic, message);
+            },
+
+            onMessageDelivered: function(topic, message) {
+                test.ok(true, 'onMessageDelivered');
+                test.ok(topic === myTopic, 'onMessageDelivered topic');
+                test.ok(message.toString() === 'Hello World!', 'onMessageDelivered message');
+                
+                this.$super(topic, message);
             }
 
         }
     );
 
-    agent('@select CC')
-        .first('method')()
-        .last('method')()
-        .all('method')()
-        ('method')()
-        ('done')()
+    agent('@select Actuator $', myTopic)
+        ('push', 'Hello World!')()
         ;
 
+};
+
+exports['Mqtt Bridge'] = function(test) {
+    test.expect(12);
+
+    var myTopic = Math.random().toString(36).slice(2);
+
+    agent({
+        setup: function(cb) {
+            this.$super(cb);
+
+            this.addBehaviour(
+                'extends Queue implements $', myTopic, 
+                '@flow onMessage', {
+                    onMessage: function(message, $cb) {
+                        test.ok(message.toString() === 'Hello World!', 'onMessage');    
+                        agent('Container')('destroy')($cb);
+                    }
+                }
+            );
+        }
+    });
+
+    agent(
+        '@host test.thingjs.org',
+        ($thing.usePaho) ? '@port 8080' : '',
+        'extends Mqtt', {
+
+            setup: function(cb) {
+                this.$super(cb);
+                
+                this.addBehaviour('$ extends Bridge', myTopic);
+
+            },
+
+            takedown: function(cb) {
+                this.$super(cb);
+                
+                test.done();
+            },
+
+            onError: function(err) {
+                test.ok(false, 'onError');
+                
+                this.$super(err);
+            },
+
+            onConnect: function() {
+                test.ok(true, 'onConnect');
+                
+                this.$super();
+            },
+
+            onDisconnect: function() {
+                test.ok(true, 'onDisconnect');
+                
+                this.$super();
+            },
+
+            doSendMessage: function(topic, message) {
+                test.ok(true, 'doSendMessage');
+                test.ok(topic === myTopic, 'doSendMessage topic');
+                test.ok(message.toString() === 'Hello World!', 'doSendMessage message');
+                
+                this.$super(topic, message);
+            },
+
+            onMessageArrived: function(topic, message) {
+                test.ok(true, 'onMessageArrived');
+                test.ok(topic === myTopic, 'onMessageArrived topic');
+                test.ok(message.toString() === 'Hello World!', 'onMessageArrived message');
+                
+                this.$super(topic, message);
+            },
+
+            onMessageDelivered: function(topic, message) {
+                test.ok(true, 'onMessageDelivered');
+                test.ok(topic === myTopic, 'onMessageDelivered topic');
+                test.ok(message.toString() === 'Hello World!', 'onMessageDelivered message');
+                
+                this.$super(topic, message);
+            }
+
+        }
+    );
+
+    agent('@select Bridge $', myTopic)
+        ('push', 'Hello World!')()
+        ;    
 };
