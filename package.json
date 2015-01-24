@@ -27,7 +27,8 @@
         "sensor",
         "actuator",
         "tessel",
-        "arduino"
+        "arduino",
+        "mqtt"
     ],
     "author": "Simon Cullen <cullens@bentham.st>",
     "licenses": [{

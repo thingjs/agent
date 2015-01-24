@@ -11,11 +11,12 @@ Thing.js is an Agent Framework written in JavaScript for building Internet of Th
 - Passivity and Singletons
 - Simple, Series, Parallel, Queue and Waker Primitive Behaviours
 - Asynchronous Messaging, Selectors and Filters
+- MQTT Sensors, Actuators and Bridging
 
 ## Installation
 ##### In the Browser
 ```html
-<script type="text/javascript" src="https://thingjs.github.io/cdn/lib/thingjs-agent-0.1.1-withasync.min.js"></script>
+<script type="text/javascript" src="https://thingjs.github.io/cdn/lib/thingjs-agent-0.2.0-withasync.min.js"></script>
 ```
 ##### Node.js
 ```sh
@@ -473,10 +474,10 @@ agent(myInterfaceB)
 ```
 
 ```javascript
-('MyObject implements /MyInt*/g', { // Regular Expressions
+('MyObject implements /MyInt/g', { // Regular Expressions
     // Agent or Behaviour
     // Accepts Messages to any Interface matching the
-    // Regular Expression Pattern /MyInt*/g
+    // Regular Expression Pattern /MyInt/g
     
     exampleMethod: function($cb) {
         console.log('exampleMethod');
@@ -672,13 +673,127 @@ agent('MyQueue')
     
 ```
 ---
+## MQTT Installation
 
+##### In the Browser
+```html
+<script type="text/javascript" src="https://thingjs.github.io/cdn/lib/thingjs-mqtt-0.2.0-withpaho.min.js"></script>
+```
+##### Node.js
+Mqtt is included in the thingjs-agent module.
+
+## MQTT Usage
+### Sensor
+```javascript
+agent( 
+    '@host my.broker.com', // Hostname of MQTT Broker
+    '@port 1883', // Optional. Defaults to 1883 or 80
+    'extends Mqtt', { 
+        // Uses MQTT in node.js
+        // Uses MQTT over Websockets in the Browser
+        
+        setup: function(cb) {
+            this.$super(cb);
+        
+            this.addBehaviour(
+                'MyTopic extends Sensor', 
+                    // Receive messages from the MQTT topic MyTopic
+                '@flow onMessage', {
+                    onMessage: function(message, $cb) {
+                        console.log(message.toString());
+                        $cb();
+                    }
+            });
+        
+        }
+    
+    }
+);
+```
+### Actuator
+```javascript
+agent(
+    '@host my.broker.com',
+    'extends Mqtt', {
+        
+        setup: function(cb) {
+            this.$super(cb);
+        
+            this.addBehaviour('MyTopic extends Actuator');
+                // Send messages to the MQTT topic MyTopic
+        
+        }
+    
+    }
+);
+
+agent('MyTopic') 
+    ('push', 'MyMessage')() // Send 'MyMessage' to the Actuator
+    ;
+    
+agent('@select Actuator MyTopic') 
+        // Select the specific Actuator if you have multiple objects 
+        // implementing the MyTopic interface
+    ('push', 'MyMessage')()
+    ;
+    
+```
+### Bridge
+```javascript
+agent(
+    '@host my.broker.com',
+    'extends Mqtt', {
+    
+        setup: function(cb) {
+            this.$super(cb)
+        
+            this.addBehaviour('MyTopic extends Bridge');
+                // Sends messages pushed to the Interface MyTopic    
+                // to the MQTT topic MyTopic
+                
+                // Pushes messages received from the MQTT topic
+                // MyTopic to the Interface MyTopic. 
+        }
+            
+    }
+);
+
+agent({
+
+    setup: function(cb) {
+        this.$super(cb);
+        
+        this.addBehaviour(
+            'extends Queue implements MyTopic', 
+                // Receive messages from the MyTopic Bridge
+            '@flow onMessage', {
+                onMessage: function(message, $cb) {
+                    console.log(message.toString());
+                    $cb();
+                }
+        });
+    }
+
+});
+
+agent('MyTopic') // Queue and Bridge
+    ('push', 'MyMessage')() 
+    ;
+    
+agent('@select Actuator MyTopic') // Bridge only
+    ('push', 'MyMessage')() 
+    ;
+
+agent('@select Bridge MyTopic') // Bridge only
+    ('push', 'MyMessage')()
+    ;
+```
+---
 ## FAQ
 #### Why is my Agent taken down shortly after setup?
 Agents should be declared @passive or have one or more behaviours. The framework is designed to automatically dereference objects not doing anything.
 
 ---
-
 ## Contact
 ### Creator
 - [Simon Cullen](http://github.com/cullens)
