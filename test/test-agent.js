@@ -1168,3 +1168,20 @@ exports['Mqtt Bridge'] = function(test) {
         ('push', 'Hello World!')()
         ;    
 };
+
+exports['BUG:A280115'] = function(test) {
+    test.expect(0);
+
+    agent('@', {
+        setup: function(cb) {
+            this.$super(cb);
+
+            $thing.searchMeta(this, 'test', function(value) {
+                test.ok(false, 'searchMeta = ' + value);
+            });
+
+            test.done();
+        }
+    });
+
+};
