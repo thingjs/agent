@@ -2,7 +2,9 @@
 
 if (typeof agent === 'undefined') {
 
-    var agent = require('../bootstrap/node.js');
+    var contextify = require('contextify'),
+        agent = require('../bootstrap/node.js')
+        ;
 
     process.on('uncaughtException', function(err) {
         console.error(err.stack);
@@ -1189,16 +1191,62 @@ exports['BUG:A280115'] = function(test) {
 exports['container'] = function(test) {
     test.expect(1);
 
+    agent('@passive', 'CD', {});
+    agent('extends CD');
+
     $thing.container(function() {
 
         try {
-            agent('extends Queue');
+            agent('extends CD');
         }
         catch(e) {
-            test.ok(true, 'extends Queue');
+            test.ok(true, 'extends CD');
+        }
+
+        agent('@passive', 'CD', {});
+
+        try {
+            agent('extends CD');
+        }
+        catch(e) {
+            test.ok(false, 'extends CD');
         }
 
     });
 
     test.done();
 };
+
+if (contextify !== undefined) {
+
+    exports['contextify container'] = function(test) {
+        test.expect(1);
+
+        agent('@passive', 'CE', {});
+        agent('extends CE');
+
+        $thing.container(function() {
+            var self = contextify({ agent: agent });
+        
+            try {
+                self.run('agent("extends CE");');
+            }
+            catch(e) {
+                test.ok(true, 'extends CE');
+            }
+
+            agent('@passive', 'CE', {});
+
+            try {
+                self.run('agent("extends CE");');
+            }
+            catch(e) {
+                test.ok(false, 'extends CE');
+            }
+
+        });
+
+        test.done();
+    };
+
+}
