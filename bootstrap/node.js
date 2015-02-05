@@ -45,13 +45,11 @@ $thing.getBacktrace = function(first) {
         0(); 
     }
     catch(e) {
-        var trace;
-
-        if ((trace = e.stack.match(/\S+\:\d+/g)) !== null)
-            return trace.slice(1 + first);
-        else if ((trace = e.stack.match(/\s+at /g)) !== null)
-            return trace.slice(1 + first);
-        return [];
+        return e.stack
+            .replace(/Object\.\$thing\.container [^\r\n\t\f ]+/g, 'container:0:0')
+            .match(/[^\r\n\t\f\( ]+\d\:\d+/g)
+            .slice(1 + first)
+            ;
     }
 };
 
@@ -70,6 +68,7 @@ if ($thing.agent === undefined) {
     require('../lib/Behaviour');
     require('../lib/Selector');
     require('../lib/Container');
+    require('../lib/Tasker');
     require('../lib/Heartbeat');
     require('../lib/Flow');
     require('../lib/Series');

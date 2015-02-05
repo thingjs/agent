@@ -1185,3 +1185,20 @@ exports['BUG:A280115'] = function(test) {
     });
 
 };
+
+exports['container'] = function(test) {
+    test.expect(1);
+
+    $thing.container(function() {
+
+        try {
+            agent('extends Queue');
+        }
+        catch(e) {
+            test.ok(true, 'extends Queue');
+        }
+
+    });
+
+    test.done();
+};
