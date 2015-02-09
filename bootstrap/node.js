@@ -46,7 +46,7 @@ $thing.getBacktrace = function(first) {
     }
     catch(e) {
         return e.stack
-            .replace(/Object\.\$thing\.container [^\r\n\t\f ]+/g, 'container:0:0')
+            .replace(/Object\.\$thing\.\$container [^\r\n\t\f ]+/g, '$container:0:0')
             .match(/[^\r\n\t\f\( ]+\d\:\d+/g)
             .slice(1 + first)
             ;

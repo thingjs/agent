@@ -42,11 +42,15 @@ $thing.getBacktrace = function(first) {
         0(); 
     }
     catch(e) {
-        var trace;
+        var trace = e.stack
+                .replace(/Object\.\$thing\.\$container [^\r\n\t\f ]+/g, '$container:0:0')
+                .replace(/\$thing\.\$container@[^\r\n\t\f ]+/g, '$container:0:0')
+                .replace(/\$container@[^\r\n\t\f ]+/g, '$container:0:0')
+            ;
 
-        if ((trace = e.stack.match(/\S+\:\d+/g)) !== null)
+        if ((trace = trace.match(/[^\r\n\t\f\( ]+\d\:\d+/g)) !== null)
             return trace.slice(1 + first);
-        else if ((trace = e.stack.match(/\s+at /g)) !== null)
+        else if ((trace = trace.match(/\s+at /g)) !== null)
             return trace.slice(1 + first);
         return [];
     }

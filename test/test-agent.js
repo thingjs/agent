@@ -1194,7 +1194,7 @@ exports['container'] = function(test) {
     agent('@passive', 'CD', {});
     agent('extends CD');
 
-    $thing.container(function() {
+    $thing.$container(function() {
 
         try {
             agent('extends CD');
@@ -1225,7 +1225,7 @@ if (contextify !== undefined) {
         agent('@passive', 'CE', {});
         agent('extends CE');
 
-        $thing.container(function() {
+        $thing.$container(function() {
             var self = contextify({ agent: agent });
         
             try {

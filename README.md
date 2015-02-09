@@ -12,11 +12,12 @@ Thing.js is an Agent Framework written in JavaScript for building Internet of Th
 - Simple, Series, Parallel, Queue and Waker Primitive Behaviours
 - Asynchronous Messaging, Selectors and Filters
 - MQTT Sensors, Actuators and Bridging
+- Microcontainers
 
 ## Installation
 ##### In the Browser
 ```html
-<script type="text/javascript" src="https://thingjs.github.io/cdn/lib/thingjs-agent-0.2.0-withasync.min.js"></script>
+<script type="text/javascript" src="https://thingjs.github.io/cdn/lib/thingjs-agent-0.2.1-withasync.min.js"></script>
 ```
 ##### Node.js
 ```sh
@@ -677,7 +678,7 @@ agent('MyQueue')
 
 ##### In the Browser
 ```html
-<script type="text/javascript" src="https://thingjs.github.io/cdn/lib/thingjs-mqtt-0.2.0-withpaho.min.js"></script>
+<script type="text/javascript" src="https://thingjs.github.io/cdn/lib/thingjs-mqtt-0.2.1-withpaho.min.js"></script>
 ```
 ##### Node.js
 Mqtt is included in the thingjs-agent module.
