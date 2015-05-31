@@ -33,24 +33,51 @@ if (module.exports.setImmediate !== undefined)
 else
     $thing.async = require('async');
 
+$thing.jsonld = require('jsonld');
+
 $thing.getMicroTime = function() {  
     var hrTime = process.hrtime();
     return Math.floor(hrTime[0] * 1000000 + hrTime[1] / 1000);
 };
 
-$thing.getBacktrace = function(first) {
+$thing.getThreadId = function(first) {
     first = first || 0;
 
-    try {
-        0(); 
-    }
-    catch(e) {
-        return e.stack
-            .replace(/Object\.\$thing\.\$container [^\r\n\t\f ]+/g, '$container:0:0')
-            .match(/[^\r\n\t\f\( ]+\d\:\d+/g)
-            .slice(1 + first)
+    var j = 0,
+        threadId = [undefined, 'main', 'main'],
+        prepareStackTrace = Error.prepareStackTrace
+        ;
+
+    first++;
+
+    Error.prepareStackTrace = function(err, frame) {
+
+        threadId[0] = frame[first].getFileName() + 
+            ':' + frame[first].getLineNumber() +
+            ':' + frame[first].getColumnNumber()
             ;
-    }
+
+        for (var i = 1; i < frame.length; i++) {
+
+            if (frame[i - 1].getFunctionName() === '$thing.$container') {
+
+                threadId[++j] = frame[i].getFileName() +
+                    ':' + frame[i].getLineNumber() +
+                    ':' + frame[i].getColumnNumber()
+                    ;
+
+                if (j > threadId.length) break;
+
+            }
+        }
+             
+    };
+
+    new Error().stack;
+
+    Error.prepareStackTrace = prepareStackTrace;
+
+    return threadId;
 };
 
 $thing.createBuffer = function(buffer) {
