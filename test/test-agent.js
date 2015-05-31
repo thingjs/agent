@@ -522,19 +522,19 @@ exports['Series'] = function(test) {
                     method1: function($cb) {
                         test.equal(this.$parent.v, 1, '$parent.v == 1');
                         this.$parent.v = 2;
-                        $cb('done')();
+                        $cb('end', 'method1')();
                     },
                     method2: function($cb) {
                         test.ok(true, 'method2');
                         this.$parent.v++;
                         (this.$parent.v == 3)
                             ? $cb()
-                            : $cb('done')()
+                            : $cb('end', 'method2')()
                             ;
                     },
                     method3: function($cb) {
                         test.ok(this.$parent.v > 2, '$parent.v > 2');
-                        $cb('done')();
+                        $cb('end', 'method3')();
                     }
                 }
             );
@@ -558,15 +558,15 @@ exports['Parallel'] = function(test) {
                 'extends Parallel', {
                     method1: function($cb) {
                         test.ok(true, 'method1');
-                        $cb('done')();
+                        $cb('end', 'method1')();
                     },
                     method2: function($cb) {
                         test.ok(true, 'method2');
-                        $cb('done')();
+                        $cb('end', 'method2')();
                     },
                     method3: function($cb) {
                         test.ok(true, 'method3');
-                        $cb('done')();
+                        $cb('end', 'method3')();
                     }
                 }
             );
@@ -592,7 +592,7 @@ exports['Queue'] = function(test) {
                     method1: function(item, $cb) {
                         test.ok(true, 'method1');
                         (item == 'k')
-                            ? $cb('done')()
+                            ? $cb('end', 'method1')()
                             : $cb()
                             ;
                     }
@@ -607,28 +607,25 @@ exports['Queue'] = function(test) {
     });
     agent('Queue1')
         ('push', ['a', 'b', 'c', 'd', 'e', 'f'])({
-            done: function($cb) {
-                test.ok(true, 'done');
+            onComplete: function($cb) {
+                test.ok(true, 'onComplete');
                 $cb();
             },
-            doneWithError: function(errs, $cb) {
-                test.ok(false, 'doneWithError');
+            onError: function(err, $cb) {
+                test.ok(false, 'onError');
                 $cb();
             }
         })
         ;
     agent('Queue1')
         ('push', ['g', 'h', 'i', 'j', 'k', 'l'])({
-            done: function($cb) {
-                test.ok(false, 'done');
+            onComplete: function($cb) {
+                test.ok(false, 'onComplete');
                 $cb();
             },
-            doneWithError: function(errs, $cb) {
-                test.ok(true, 'doneWithError');
-                test.deepEqual(
-                    errs,
-                    [undefined, undefined, undefined, undefined, undefined, -1]
-                );
+            onError: function(err, $cb) {
+                test.ok(true, 'onError');
+                test.ok(err === -1, 'err === -1');
                 $cb();
             }
         })
@@ -647,7 +644,7 @@ exports['Behaviour reset'] = function(test) {
                 'extends Series', {
                     method1: function($cb) {
                         test.ok(true, 'method1');
-                        $cb('done')();
+                        $cb('end', 'method1')();
                     }
                 }
             );
@@ -792,12 +789,12 @@ exports['removeBehaviour'] = function(test) {
     });
 };
 
-exports['Done'] = function(test) {
+exports['Complete'] = function(test) {
     test.expect(1);
-    agent('BB or Done')
+    agent('BB or Complete')
         ('method')({
-            done: function($cb) {
-                test.ok(true, 'done');
+            onComplete: function($cb) {
+                test.ok(true, 'onComplete');
                 test.done();
                 $cb();
             }
@@ -808,8 +805,8 @@ exports['Error'] = function(test) {
     test.expect(1);
     agent('BB or Error')
         ('method')({
-            doneWithError: function(err, $cb) {
-                test.ok(true, 'doneWithError');
+            onError: function(err, $cb) {
+                test.ok(true, 'onError');
                 test.done();
                 $cb();
             }
@@ -998,7 +995,7 @@ exports['@singleton Waker'] = function(test) {
 
 };
 
-exports['Mqtt Actuator Sensor'] = function(test) {
+/*exports['Mqtt Actuator Sensor'] = function(test) {
     test.expect(12);
 
     var myTopic = Math.random().toString(36).slice(2);
@@ -1169,7 +1166,7 @@ exports['Mqtt Bridge'] = function(test) {
     agent('@select Bridge $', myTopic)
         ('push', 'Hello World!')()
         ;    
-};
+};*/
 
 exports['BUG:A280115'] = function(test) {
     test.expect(0);
