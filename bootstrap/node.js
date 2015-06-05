@@ -101,6 +101,7 @@ if ($thing.agent === undefined) {
     require('../lib/Series');
     require('../lib/Parallel');
     require('../lib/Queue');
+    require('../lib/MapReduce');
     require('../lib/Waker');
     require('../lib/Util');
     require('../lib/transport/Mqtt.js');
