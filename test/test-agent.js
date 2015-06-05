@@ -995,7 +995,7 @@ exports['@singleton Waker'] = function(test) {
 
 };
 
-/*exports['Mqtt Actuator Sensor'] = function(test) {
+exports['Mqtt Actuator Sensor'] = function(test) {
     test.expect(12);
 
     var myTopic = Math.random().toString(36).slice(2);
@@ -1166,7 +1166,7 @@ exports['Mqtt Bridge'] = function(test) {
     agent('@select Bridge $', myTopic)
         ('push', 'Hello World!')()
         ;    
-};*/
+};
 
 exports['BUG:A280115'] = function(test) {
     test.expect(0);
