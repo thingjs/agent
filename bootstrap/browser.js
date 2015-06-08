@@ -35,26 +35,100 @@ $thing.getMicroTime = function() {
     return Date.now() * 1000;
 };
 
-$thing.getBacktrace = function(first) {
-    first = first || 0;
+if (!!window.chrome) {
 
-    try {
-        0(); 
-    }
-    catch(e) {
-        var trace = e.stack
-                .replace(/Object\.\$thing\.\$container [^\r\n\t\f ]+/g, '$container:0:0')
-                .replace(/\$thing\.\$container@[^\r\n\t\f ]+/g, '$container:0:0')
-                .replace(/\$container@[^\r\n\t\f ]+/g, '$container:0:0')
+    $thing.getThreadId = function(first) {
+        first = first || 0;
+
+        var j = 0,
+            threadId = [undefined, 'main', 'main'],
+            prepareStackTrace = Error.prepareStackTrace
             ;
 
-        if ((trace = trace.match(/[^\r\n\t\f\( ]+\d\:\d+/g)) !== null)
-            return trace.slice(1 + first);
-        else if ((trace = trace.match(/\s+at /g)) !== null)
-            return trace.slice(1 + first);
-        return [];
-    }
-};
+        first++;
+
+        Error.prepareStackTrace = function(err, frame) {
+
+            if (frame.length > first) {
+
+                threadId[0] = frame[first].getFileName() + 
+                    ':' + frame[first].getLineNumber() +
+                    ':' + frame[first].getColumnNumber()
+                    ;
+
+                for (var i = 1; i < frame.length; i++) {
+
+                    if (frame[i - 1].getFunctionName() === '$thing.$container') {
+
+                        threadId[++j] = frame[i].getFileName() +
+                            ':' + frame[i].getLineNumber() +
+                            ':' + frame[i].getColumnNumber()
+                            ;
+
+                        if (j > threadId.length) break;
+
+                    }
+                }
+
+            }
+             
+        };
+
+        new Error().stack;
+
+        Error.prepareStackTrace = prepareStackTrace;
+
+        return threadId;
+    };
+
+}
+else {
+
+    $thing.getBacktrace = function(first) {
+        first = first || 0;
+
+        try {
+            0(); 
+        }
+        catch(e) {
+            var trace = e.stack
+                    .replace(/Object\.\$thing\.\$container [^\r\n\t\f ]+/g, '$container:0:0')
+                    .replace(/\$thing\.\$container@[^\r\n\t\f ]+/g, '$container:0:0')
+                    .replace(/\$container@[^\r\n\t\f ]+/g, '$container:0:0')
+                ;
+
+            if ((trace = trace.match(/[^\r\n\t\f\( ]+\d\:\d+/g)) !== null)
+                return trace.slice(1 + first);
+            else if ((trace = trace.match(/\s+at /g)) !== null)
+                return trace.slice(1 + first);
+            return [];
+        }
+    };
+
+    $thing.getThreadId = function(first) {
+        var j = 0,
+            threadId = [undefined, 'main', 'main'],
+            frame = $thing.getBacktrace(first + 1)
+            ;
+
+        threadId[0] = frame[0];
+
+        for (var i = 1; i < frame.length; i++) {
+
+            if (frame[i - 1].indexOf('$container:0:0') > -1) {
+
+                threadId[++j] = frame[i];
+
+                if (j > threadId.length) break;
+
+            }
+
+        }
+
+        return threadId;
+    };
+
+}
 
 $thing.createBuffer = function(byteArray) {
     return {
