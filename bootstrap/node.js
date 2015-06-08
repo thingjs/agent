@@ -27,6 +27,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 GLOBAL.$thing = GLOBAL.$thing || {};
 
 $thing.bootstrap = 'node.js';
+$thing.usePaho = false;
 
 if (module.exports.setImmediate !== undefined)
     $thing.async = module.exports;
@@ -52,23 +53,27 @@ $thing.getThreadId = function(first) {
 
     Error.prepareStackTrace = function(err, frame) {
 
-        threadId[0] = frame[first].getFileName() + 
-            ':' + frame[first].getLineNumber() +
-            ':' + frame[first].getColumnNumber()
-            ;
+        if (frame.length > first) {
 
-        for (var i = 1; i < frame.length; i++) {
+            threadId[0] = frame[first].getFileName() + 
+                ':' + frame[first].getLineNumber() +
+                ':' + frame[first].getColumnNumber()
+                ;
 
-            if (frame[i - 1].getFunctionName() === '$thing.$container') {
+            for (var i = 1; i < frame.length; i++) {
 
-                threadId[++j] = frame[i].getFileName() +
-                    ':' + frame[i].getLineNumber() +
-                    ':' + frame[i].getColumnNumber()
-                    ;
+                if (frame[i - 1].getFunctionName() === '$thing.$container') {
 
-                if (j > threadId.length) break;
+                    threadId[++j] = frame[i].getFileName() +
+                        ':' + frame[i].getLineNumber() +
+                        ':' + frame[i].getColumnNumber()
+                        ;
 
+                    if (j > threadId.length) break;
+
+                }
             }
+
         }
              
     };
