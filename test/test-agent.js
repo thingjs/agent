@@ -632,43 +632,6 @@ exports['Queue'] = function(test) {
         ;
 };
 
-exports['Behaviour reset'] = function(test) {
-    test.expect(5);
-    agent({
-        setup: function(cb) {
-            test.ok(true, 'setup');
-            this.$super(cb);
-            this.counter = 0;
-            var b1 = this.addBehaviour(
-                '@flow method1',
-                'extends Series', {
-                    method1: function($cb) {
-                        test.ok(true, 'method1');
-                        $cb('end', 'method1')();
-                    }
-                }
-            );
-            this.addBehaviour({
-                action: function($cb) {
-                    b1.reset();
-                    this.$super($cb);
-                },
-                done: function() {
-                    return (++this.$parent.counter < 4)
-                        ? false
-                        : true
-                        ;
-                }
-            });
-        },
-        takedown: function(cb) {
-            test.ok(true, 'takedown');
-            this.$super(cb);
-            test.done();
-        }
-    });
-};
-
 exports['singleton'] = function(test) {
     test.expect(2);
     agent(
@@ -1247,3 +1210,103 @@ if (contextify !== undefined) {
     };
 
 }
+
+exports['Queue Reset'] = function(test) {
+    test.expect(1);
+
+    agent({
+
+        setup: function(cb) {
+            this.$super(cb);
+
+            var queue = this.addBehaviour('extends Queue', '@flow doItem1 doItem2', {
+
+                doItem1: function(item, $cb) {
+
+                    test.ok(false, 'doItem1');
+                    
+                    $cb('end', 'doItem1')();
+                },
+
+                doItem2: function(item, $cb) {
+                    
+                    test.ok(item === 2, 'item === 2');
+                    
+                    $cb('end', 'doItem2')();
+                }
+
+
+            });
+
+            agent(queue)
+                ('pause')()
+                ('end', 'doItem1')()
+                ('push', 1)()
+                ('push', 3)()
+                ('push', 4)()
+                ('reset')()
+                ('push', 2)()
+                ;
+
+        },
+
+        takedown: function(cb) {
+            this.$super(cb);
+            test.done();
+        }
+
+    });
+
+};
+
+exports['MapReduce'] = function(test) {
+    test.expect(104);
+
+    agent({
+
+        setup: function(cb) {
+            this.$super(cb);
+
+            var j = 0;
+
+            var mapReduce = this.addBehaviour('extends MapReduce', '@flow map', {
+
+                map: function(value, $cb) {
+                    test.ok(true, 'map');
+
+                    this.write(value % 2, value);
+
+                    $cb();
+                },
+
+                reduce: function(values, cb) {
+                    test.ok(true, 'reduce');
+                    test.ok(values.length === 50, 'values.length === 50');
+
+                    if (++j === 2) this.endAll();
+
+                    this.$super(values, cb);
+
+                }
+
+            });
+
+            mapReduce = agent(mapReduce);
+
+            mapReduce('pause')();
+
+            for (var i = 0; i < 100; i++)
+                mapReduce('push', i)();
+
+            mapReduce('resume')();
+
+        },
+
+        takedown: function(cb) {
+            this.$super(cb);
+            test.done();
+        }
+
+    });
+
+};
