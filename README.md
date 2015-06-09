@@ -2,22 +2,23 @@
 
 [![Build Status](https://travis-ci.org/thingjs/agent.svg?branch=master)](https://travis-ci.org/thingjs/agent)
 
-Thing.js is an Agent Framework written in JavaScript for building Internet of Things applications. The framework supports Node.js, the Browser, Tessel, Phonegap, JavaScriptCore and other Mobile Containers.
+Thing.js is an Agent Framework written in JavaScript for building Internet of Things applications. The Framework supports Node.js, Browsers (ES5+, Chrome, Safari, Firefox, Opera), Tessel 2, Phonegap/Cordova, JavaScriptCore and other Mobile Containers.
 
 ## Features
 
 - Abstractions, Inheritance and Interfaces
 - Annotations and Templates
 - Passivity and Singletons
-- Simple, Series, Parallel, Queue and Waker Primitive Behaviours
+- Simple, Series, Parallel, Queue, MapReduce and Waker Primitive Behaviours
+- HRRN Scheduling and Microcontainers
 - Asynchronous Messaging, Selectors and Filters
+- JSON-LD Ontologies and Automatic Term Translation
 - MQTT Sensors, Actuators and Bridging
-- Microcontainers
 
 ## Installation
 ##### In the Browser
 ```html
-<script type="text/javascript" src="https://thingjs.github.io/cdn/lib/thingjs-agent-0.2.1-withasync.min.js"></script>
+<script type="text/javascript" src="https://thingjs.github.io/cdn/lib/thingjs-agent-0.2.2-full.min.js"></script>
 ```
 ##### Node.js
 ```sh
@@ -584,21 +585,21 @@ this.addBehaviour(
         
         method1: function($cb) {
             console.log('method1');
-            $cb('done')(); 
-            // $cb('done') when finished
-            // otherwise $cb() or $cb('yield')() to call again
+            $cb('end', 'method1')(); 
+            // $cb('end', 'method1')() when finished
+            // otherwise $cb() to call again
         },
         method2: function($cb) {
             console.log('method2');
-            $cb('done')(); 
+            $cb('end', 'method2')(); 
         },
         method3: function($cb) {
             console.log('method3');
-            $cb('done')(); 
+            $cb('end', 'method3')(); 
         },
         method4: function($cb) {
             console.log('method4');
-            $cb('done')(); 
+            $cb('end', 'method4')(); 
         }
     }
 );
@@ -618,21 +619,21 @@ this.addBehaviour(
         
         method1: function($cb) {
             console.log('method1');
-            $cb('done')(); 
-            // $cb('done') when finished
-            // otherwise $cb() or $cb('yield')() to call again
+            $cb('end', 'method1')(); 
+            // $cb('end', 'method1')() when finished
+            // otherwise $cb() to call again
         },
         method2: function($cb) {
             console.log('method2');
-            $cb('done')(); 
+            $cb('end', 'method2')(); 
         },
         method3: function($cb) {
             console.log('method3');
-            $cb('done')(); 
+            $cb('end', 'method3')(); 
         },
         method4: function($cb) {
             console.log('method4');
-            $cb('done')(); 
+            $cb('end', 'method4')(); 
         }
     }
 );
@@ -657,7 +658,9 @@ this.addBehaviour(
 );
 
 agent('MyQueue')
+    ('pause')() // Pauses the Queue
     ('push', 42)()
+    ('resume')() // Un-pauses the Queue
     ('push', 43)()
     ('push', 44)()
     ;
@@ -674,15 +677,6 @@ agent('MyQueue')
     
 ```
 ---
-## MQTT Installation
-
-##### In the Browser
-```html
-<script type="text/javascript" src="https://thingjs.github.io/cdn/lib/thingjs-mqtt-0.2.1-withpaho.min.js"></script>
-```
-##### Node.js
-Mqtt is included in the thingjs-agent module.
-
 ## MQTT Usage
 ### Sensor
 ```javascript
