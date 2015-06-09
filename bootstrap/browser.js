@@ -24,12 +24,19 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 'use strict';
 
+if (typeof async === 'undefined' || typeof async.setImmediate === 'undefined')
+    throw new Error('async missing: https://github.com/caolan/async');
+
+if (typeof jsonld === 'undefined' || typeof jsonld.compact === 'undefined')
+    throw new Error('jsonld missing: https://github.com/digitalbazaar/jsonld.js');
+
 var $thing = $thing || {};
 
 $thing.bootstrap = 'browser.js';
 $thing.usePaho = true;
 
 $thing.async = async;
+$thing.jsonld = jsonld;
 
 $thing.getMicroTime = function() {
     return Date.now() * 1000;
