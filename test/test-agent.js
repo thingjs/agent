@@ -1310,3 +1310,332 @@ exports['MapReduce'] = function(test) {
     });
 
 };
+
+exports['MapReduce Push'] = function(test) {
+    test.expect(11);
+
+    agent('@passive', 'CF implements CI', {
+
+        push: function(value, $cb) {
+
+            test.ok(true, 'CF.push');
+
+            test.ok(
+                value === 1 || value === 3, 
+                'value === 1 || value === 3'
+            );
+
+            $cb();
+        }
+
+    });
+
+    agent('@passive', 'CG implements CI', {
+
+        push: function(value, $cb) {
+
+            test.ok(false, 'CG.push');
+
+            $cb();
+        }
+
+    });
+
+   agent('@passive', 'CH', {
+
+        push: function(value, $cb) {
+
+            test.ok(true, 'CH.push');
+
+            test.ok(
+                value === 1 || value === 3, 
+                'value === 1 || value === 3'
+            );
+
+            $cb();
+        }
+
+    });
+
+
+    agent({
+
+        setup: function(cb) {
+            this.$super(cb);
+
+            var mapReduce = this.addBehaviour(
+                'extends MapReduce', 
+                '@flow map', 
+                '@push CH', 
+                '@push CI not CG', {
+
+                map: function(value, $cb) {
+                    test.ok(true, 'map');
+
+                    this.write(value, value);
+
+                    if (value === 3) 
+                        $cb('end', 'map')();
+                    else 
+                        $cb();
+                },
+
+                reduce: function(values, cb) {
+
+                    this.$super(values[0] === 2 ? undefined : values[0], cb);
+
+                }
+
+            });
+
+            agent(mapReduce)
+                ('push', [1, 2, 3])()
+                ;
+
+        },
+
+        takedown: function(cb) {
+            this.$super(cb);
+            test.done();
+        }
+
+    });
+
+};
+
+exports['MapReduce reset'] = function(test) {
+    test.expect(2);
+
+    agent({
+
+        setup: function(cb) {
+            this.$super(cb);
+
+            this.addBehaviour('CL extends MapReduce', '@flow map', {
+
+                map: function(value, $cb) {
+                    test.ok(value === 2, 'value === 2');
+
+                    this.write(value, value);
+
+                    $cb('end', 'map')();
+                },
+
+                reduce: function(values, cb) {
+
+                    test.ok(values[0] === 2, 'value[0] === 2');
+
+                    this.$super(values, cb);
+                }
+
+
+            });
+
+        },
+
+        takedown: function(cb) {
+            this.$super(cb);
+            test.done();
+        }
+
+    });
+
+    agent('CL')
+        ('pause')()
+        ('push', 1)()
+        ('push', 3)()
+        ('reset')()
+        ('push', 2)()
+        ;
+
+};
+
+exports['Ontology'] = function(test) {
+    test.expect(4);
+
+    agent('@passive', 'CJ', {
+
+        red: 'http://colours/red1',
+        green: 'http://colours/green1',
+        blue: 'http://colours/blue1',
+
+        method: function(a, $cb) {
+
+            test.ok(a.red === '#FF0000', 'a.red === \'#FF0000\'');
+            test.ok(a.green === '#00FF00', 'a.green === \'#00FF00\'');
+            test.ok(a.blue === '#0000FF', 'a.blue === \'#0000FF\'');
+            test.ok(
+                a['http://colours/blue2'] === '#0000FE', 
+                'a[\'http://colours/blue2\'] === \'#0000FE\''
+            );
+
+            $cb();
+
+            test.done();
+        }
+
+    });
+
+    var message = {
+
+        '@context': {
+            red1: 'http://colours/red1',
+            green1: 'http://colours/green1',
+            blue1: 'http://colours/blue1',
+            blue2: 'http://colours/blue2'
+        },
+
+        red1: '#FF0000',
+        green1: '#00FF00',
+        blue1: '#0000FF',
+        blue2: '#0000FE'
+
+    };
+
+    agent('CJ')('method', message)();
+
+};
+
+exports['Ontology @context'] = function(test) {
+    test.expect(12);
+
+    agent('@passive', 'CK', {
+
+        '@context': {
+            red: 'http://colours/red1',
+            green: 'http://colours/green1',
+            blue: 'http://colours/blue1'
+        },
+
+        method: function(a, b, c, d, e, f, g, $cb) {
+
+            test.ok(a.red === '#FF0000', 'a.red === \'#FF0000\'');
+            test.ok(a.green === '#00FF00', 'a.green === \'#00FF00\'');
+            
+            test.ok(b.blue === '#0000FF', 'b.blue === \'#0000FF\'');
+            test.ok(
+                b['http://colours/blue2'] === '#0000FE', 
+                'b[\'http://colours/blue2\'] === \'#0000FE\''
+            );
+
+            test.ok(c.name === 'messageC', 'c.name === \'messageC\'');
+            test.ok(c.red1 === '#FF0000', 'c.red1 === \'#FF0000\'');
+
+            test.ok(
+                typeof d[0]['@context'] === 'object', 
+                'typeof d[0][\'@context\'] === \'object\''
+            );
+            test.ok(d[0].red1 === '#FF0000', 'd[0][\'red1\'] === \'#FF0000\'');
+            test.ok(d[0].green1 === '#00FF00', 'd[0][\'green1\'] === \'#00FF00\'');
+
+            test.ok(e === '1', 'e === \'1\'');
+
+            test.ok(f === true, 'f === true');
+
+            test.ok(g === undefined, 'g === undefined');
+
+            $cb();
+
+            test.done();
+        }
+
+    });
+
+    var context = {
+            red1: 'http://colours/red1',
+            green1: 'http://colours/green1',
+            blue1: 'http://colours/blue1',
+            blue2: 'http://colours/blue2'
+        },
+        messageA = {
+            '@context': context,
+            red1: '#FF0000',
+            green1: '#00FF00'
+        },
+        messageB = {
+            '@context': context,
+            blue1: '#0000FF',
+            blue2: '#0000FE'
+        },
+        messageC = {
+            name: 'messageC',
+            red1: '#FF0000'
+        }
+        ;
+
+    agent('CK')('method', messageA, messageB, messageC, [messageA], '1', true, undefined)();
+
+};
+
+exports['Ontology MapReduce'] = function(test) {
+    test.expect(1);
+
+    agent({
+
+        setup: function(cb) {
+            this.$super(cb);
+
+            this.addBehaviour('CM extends MapReduce', '@flow map', {
+
+                fullName: 'http://schema.org/name',
+
+                map: function(person, $cb) {
+
+                    this.write(person.fullName, person);
+
+                    $cb();
+
+                },
+
+                reduce: function(persons, cb) {
+
+                    test.ok(persons.length === 3, 'persons.length === 3');
+
+                    this.end('map');
+
+                    this.$super(persons, cb);
+                }
+
+            });
+
+        },
+
+        takedown: function(cb) {
+            this.$super(cb);
+            test.done();
+        }
+
+    });
+
+    var persons = [
+        {
+            '@context': 'http://schema.org/',
+            '@type': 'Person',
+            'name': 'Jane Doe',
+            'jobTitle': 'Professor',
+            'telephone': '(425) 123-4567',
+            'url': 'http://www.janedoe.com'
+        },
+        {
+            '@context': 'http://schema.org/',
+            '@type': 'Person',
+            'name': 'Jane Doe',
+            'jobTitle': 'Professor',
+            'telephone': '(425) 123-4567',
+            'url': 'http://www.janedoe.com'
+        },
+        {
+            '@context': 'http://schema.org/',
+            '@type': 'Person',
+            'name': 'Jane Doe',
+            'jobTitle': 'Professor',
+            'telephone': '(425) 123-4567',
+            'url': 'http://www.janedoe.com'
+        }
+    ];
+
+    agent('CM')('push', persons)();
+
+};
+
+
