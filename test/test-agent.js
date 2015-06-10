@@ -1638,4 +1638,76 @@ exports['Ontology MapReduce'] = function(test) {
 
 };
 
+exports['Inline'] = function(test) {
+    test.expect(15);
+
+    var i = 0;
+
+    agent('@passive', 'CN', {
+
+        method1: function($cb) {
+
+            test.ok(true, 'method1');
+
+            $cb('onComplete')();
+
+        },
+
+        method2: function(a, $cb) {
+
+            test.ok(true, 'method2');
+            test.ok(a === 'a', 'a === \'a\'');
+
+            $cb('onError')();
+
+        },
+
+        method3: function($cb) {
+
+            test.ok(true, 'method3');
+
+            $cb('onComplete', 'b')();
+
+        }
+
+    });
+
+    agent('CN')
+        ('^onComplete', function($cb) {
+
+            i++;
+
+            test.ok(true, '^onComplete');
+
+            test.ok(i <= 3, 'i <= 3');
+            
+            $cb();
+
+        })
+        ('^onError', function($cb) {
+
+            test.ok(true, '^onError');
+
+            $cb();
+
+        })
+        ('method1')()
+        ('method1')()
+        ('method1')()
+        ('method2', 'a')()
+        ('^onComplete', function(b, $cb) {
+
+            test.ok(true, '^onComplete');
+            test.ok(b === 'b', 'b === \'b\'');
+
+            $cb();
+
+            test.done();
+
+        })
+        ('method3')()
+        ;
+
+};
+
 
