@@ -1,6 +1,6 @@
 {
     "name": "thingjs-agent",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "description": "Agent Framework for building the Internet of Things",
     "main": "bootstrap/node.js",
     "scripts": {
@@ -17,17 +17,20 @@
         "node": "0.10.x"
     },
     "keywords": [
+        "internet of things",
+        "internet of wild things",
+        "internet of everything",
+        "web of things",
         "iot",
         "m2m",
-        "things",
-        "everything",
+        "wot",
         "agent",
-        "autonomous",
+        "behaviour",
         "messaging",
+        "ontology",
         "sensor",
         "actuator",
-        "tessel",
-        "arduino",
+        "json-ld",
         "mqtt"
     ],
     "author": "Simon Cullen <cullens@bentham.st>",
