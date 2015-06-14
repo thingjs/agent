@@ -10,9 +10,9 @@ Thing.js is an Agent Framework written in JavaScript for building Internet of Th
 - Annotations and Templates
 - Passivity and Singletons
 - Simple, Series, Parallel, Queue, MapReduce and Waker Primitive Behaviours
-- HRRN Scheduling and Microcontainers
+- HRRN Scheduling and Micro-containers
 - Asynchronous Messaging, Selectors and Filters
-- JSON-LD Ontologies and Automatic Term Translation
+- JSON-LD Ontologies and Message Translation
 - MQTT Sensors, Actuators and Bridging
 
 ## Installation
@@ -36,14 +36,11 @@ agent('abstract smith', {
         
         this.quote = "As you can see, we've had our eye on you for some time now, Mr. Anderson.";
 
-        this.addBehaviour(
-            '@passive',
-            'search', {
-                forNeo: function($cb) {
-                    $cb('found', this.$owner.quote)();
-                }
+        this.addBehaviour('@passive', 'search', {
+            forNeo: function($cb) {
+                $cb('found', this.$owner.quote)();
             }
-        );
+        });
     }
 });
 
@@ -52,12 +49,11 @@ agent('extends smith');
 agent('extends smith');
 
 agent('search')
-    ('forNeo')({
-        found: function(quote, $cb) {
-            console.log(quote);
-            $cb();
-        }
+    ('^found', function(quote, $cb) {
+        console.log(quote);
+        $cb();
     })
+    ('forNeo')()
     ;
 // Outputs: "As you can see, we've had our eye on you for some time now, Mr. Anderson."
 //          "As you can see, we've had our eye on you for some time now, Mr. Anderson."
@@ -117,6 +113,34 @@ agent('MyAgent', {
     }
 })
 ```
+
+### Ontology Terms
+```javascript
+('MyObject', { // Agent or Behaviour
+
+    // JSON-LD Context
+
+    name: 'http://schema.org/name', // Term
+    
+    url: 'https://schema.org/url' // Another Term
+
+})
+```
+
+```javascript
+('MyObject', { // Agent or Behaviour
+
+    '@context': { // JSON-LD Context
+    
+        name: 'http://schema.org/name', // Term
+    
+        url: 'https://schema.org/url' // Another Term
+    
+    }
+
+})
+```
+
 ### Inheritance
 ```javascript
 ('MyBaseObject', { // Agent or Behaviour
@@ -267,7 +291,9 @@ agent('MyObject')
 agent('MyObject') 
     ('exampleMethod', 42)({ 
         // Callback Object created from Agent Declaration 
-        // Callback Objects may be Agent Declarations or Selectors
+        
+        // Callback Objects may be Agent Declarations, 
+        // Instances or Selectors
         
         callbackMethod: function($cb) {
             console.log('callbackMethod');
@@ -279,7 +305,67 @@ agent('MyObject')
 //           42
 //          'callbackMethod'
 ```
+```javascript
+('MyObject', { // Agent or Behaviour
 
+    exampleMethod(meaningOfLife, $cb) { 
+        
+        console.log('exampleMethod');
+        console.log(meaningOfLife);
+        
+        $cb('callbackMethod')(); 
+    }
+})
+
+agent('MyObject')
+    ('^callbackMethod', function($cb) { 
+    // The ^ operator defines an inline method called callbackMethod
+        
+        console.log('callbackMethod');
+        
+        $cb();
+    })
+    ('exampleMethod', 42)() // Uses callbackMethod
+    ('exampleMethod', 42)() // Reuses callbackMethod
+    ;
+    
+// Outputs: 'exampleMethod'
+//           42
+//          'callbackMethod'
+//          'exampleMethod'
+//           42
+//          'callbackMethod'
+```
+### Message Translation
+```javascript
+this.addBehaviour('MyBehaviour', {
+
+    fullName: 'http://schema.org/name', 
+    
+    hello: function(person, $cb) {
+    
+        console.log('Hello ' + person.fullName);
+    
+        $cb();
+    
+    }
+
+});
+
+var me = {
+        '@context': 'http://schema.org/',
+        '@type': 'Person',
+        'name': 'Jane Doe',
+        'jobTitle': 'Professor',
+        'telephone': '(425) 123-4567',
+        'url': 'http://www.janedoe.com'
+    }
+    ;
+
+agent('MyBehaviour')('hello', me)();
+
+// Outputs: Hello Jane Doe
+```
 ### Selectors
 ```javascript
 agent('MyAgent', { 
@@ -356,6 +442,7 @@ agent('MyAgent', {
     setup: function(cb) {
         this.$super(cb);
      
+        // MyBehaviourA has a current HRRN Response Ratio of 3
         this.addBehaviour('MyBehaviourA implements MyBehaviour', {
             exampleMethod: function($cb) {
                 console.log('MyBehaviourA.exampleMethod');
@@ -363,13 +450,15 @@ agent('MyAgent', {
             }
         });
         
+        // Current Ratio of 2
         this.addBehaviour('MyBehaviourB implements MyBehaviour', {
             exampleMethod: function($cb) {
                 console.log('MyBehaviourB.exampleMethod');
                 $cb();
             }
         });
-         
+        
+        // Current Ratio of 1
         this.addBehaviour('MyBehaviourC implements MyBehaviour', {
             exampleMethod: function($cb) {
                 console.log('MyBehaviourC.exampleMethod');
@@ -675,6 +764,81 @@ agent('MyQueue')
 //          43
 //          44
     
+```
+
+### MapReduce Behaviour
+```javascript
+this.addBehaviour(
+    '@flow map', // Declare 1 or more Mapper Methods
+    'MyMapReduce extends MapReduce', { // MapReduce Behaviour
+
+    map: function(value, $cb) { // Mapper Method
+    
+        this.write(value % 2, value); // write(key, value)
+    
+        $cb();
+    
+    },
+    
+    reduce: function(values, cb) { // Reducer Method
+    
+        console.log(values);
+    
+        this.$super(values, cb);
+    
+    }
+
+});
+
+agent('MyMapReduce')
+    ('push', [0,1,2,3])()
+    ;
+    
+// Outputs: [0,2]
+//          [1,3]
+```
+```javascript
+this.addBehaviour(
+    '@flow doSet',
+    'MyQueue extends Queue',  {
+    
+    doSet: function(value, $cb) {
+    
+        console.log(value);
+    
+        $cb();
+        
+    }
+
+});
+
+this.addBehaviour(
+    '@flow map', // Declare 1 or more Mapper Methods
+    '@push MyQueue', // Push result to MyQueue
+    'MyMapReduce extends MapReduce', { // MapReduce Behaviour
+
+    map: function(value, $cb) { // Mapper Method
+    
+        this.write(value % 2, value); // write(key, value)
+    
+        $cb();
+    
+    },
+    
+    reduce: function(values, cb) { // Reducer Method
+
+        this.$super([values], cb); // Push entire set as value
+    
+    }
+
+});
+
+agent('MyMapReduce')
+    ('push', [0,1,2,3])()
+    ;
+    
+// Outputs: [0,2]
+//          [1,3]
 ```
 ---
 ## MQTT Usage

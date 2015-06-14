@@ -4,17 +4,18 @@ History
 ## 0.2.2
 
 * Implemented HRRN action() and Message Scheduling
-* Implemented JSON-LD Ontology Definitions and Message Term Translation
+* Implemented JSON-LD Ontology Definitions and Message Translation
 * Implemented MapReduce Behaviour
-* Flow Behaviour changes: implicit yeilding and Flow Methods can now be removed out of line
-* Newly created Microcontainers are populated with parent container abstract delegates
-* Microcontainers and Sources are now identified with getThreadId()
+* Implemented Inline Methods
+* Flow Behaviour changes: implicit yielding and Flow Methods can now be removed out of line
+* Newly created Micro-containers are populated with parent container abstract delegates
+* Micro-containers and Sources are now identified with getThreadId()
 * The V8 getThreadId() uses prepareStackTrace() for Backtracing (faster than exceptions)
 * More efficient memory usage in most use cases
 
 ## 0.2.1
 
-* Added Microcontainers
+* Added Micro-containers
 * Annotation Bugfix
 
 ## 0.2.0
