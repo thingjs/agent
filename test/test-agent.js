@@ -832,7 +832,7 @@ exports['Singleton Unref'] = function(test) {
 };
 
 exports['filters'] = function(test) {
-    test.expect(7);
+    test.expect(8);
 
     agent(
         '@passive', 
@@ -867,6 +867,7 @@ exports['filters'] = function(test) {
     agent('@select CC')
         .first('method')()
         .last('method')()
+        .closest('method')()
         .all('method')()
         ('method')()
         ('done')()
@@ -1746,4 +1747,36 @@ exports['NoWrite MapReduce'] = function(test) {
 
     agent('CM')('push', 1)();
 
+};
+
+
+exports['xorDistance'] = function(test) {
+    test.expect(5);
+
+    test.ok(
+        $thing.xorDistance('abcdef', 'abcdef') === 0, 
+        '$thing.xorDistance(\'abcdef\', \'abcdef\')'
+    );
+
+    test.ok(
+        $thing.xorDistance('abcdef', 'bbcdef') === 3, 
+        '$thing.xorDistance(\'abcdef\', \'bbcdef\')'
+    );
+
+    test.ok(
+        $thing.xorDistance('bbcdef', 'abcdef') === 3, 
+        '$thing.xorDistance( \'bbcdef\', \'abcdef\')'
+    );
+
+    test.ok(
+        $thing.xorDistance('abcdef', 'abc') === 303, 
+        '$thing.xorDistance(\'abcdef\', \'abc\')'
+    );
+
+    test.ok(
+        $thing.xorDistance('abc', 'abcdef') === 303, 
+        '$thing.xorDistance(\'abc\', \'abcdef\')'
+    );
+
+    test.done();
 };
