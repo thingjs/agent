@@ -1710,4 +1710,40 @@ exports['Inline'] = function(test) {
 
 };
 
+exports['NoWrite MapReduce'] = function(test) {
+    test.expect(1);
 
+    agent({
+
+        setup: function(cb) {
+            this.$super(cb);
+
+            this.addBehaviour('CM extends MapReduce', '@flow map', {
+
+                map: function(value, $cb) {
+
+                    test.ok(true, 'map');
+
+                    $cb();
+
+                    test.done();
+
+                },
+
+                reduce: function(values, cb) {
+
+                    test.ok(false, 'reduce');
+
+                    this.$super(values, cb);
+
+                }
+
+            });
+
+        }
+
+    });
+
+    agent('CM')('push', 1)();
+
+};
