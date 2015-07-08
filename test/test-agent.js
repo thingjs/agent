@@ -1790,3 +1790,41 @@ exports['xorDistance'] = function(test) {
 
     test.done();
 };
+
+exports['General Exceptions'] = function(test) {
+    test.expect(2);
+
+    var i = 0;
+
+    agent('@passive', 'CO', {
+
+        method: function($cb) {
+
+            if (++i === 1) throw('error');
+            else $cb('onComplete')();
+        }
+
+    });
+
+    agent('CO')
+        ('^onError', function(err, $cb) {
+
+            test.ok(err === 'error', 'err === \'error\'');
+
+            $cb();
+
+        })
+        ('^onComplete', function($cb) {
+
+            test.ok(i === 2, 'i === 2');
+           
+            $cb();
+
+            test.done();
+
+        })
+        ('method')()
+        ('method')()
+        ;
+
+};
