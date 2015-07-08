@@ -1640,9 +1640,11 @@ exports['Ontology MapReduce'] = function(test) {
 };
 
 exports['Inline'] = function(test) {
-    test.expect(15);
+    test.expect(17);
 
-    var i = 0;
+    var i = 0,
+        j = 0
+        ;
 
     agent('@passive', 'CN', {
 
@@ -1695,13 +1697,21 @@ exports['Inline'] = function(test) {
         ('method1')()
         ('method1')()
         ('method1')()
+        ('^onComplete', function($cb) {
+
+            test.ok(true, '^onComplete');
+            test.ok(++j === 1, '++j === 1');
+
+            $cb();
+
+        })
         ('method2', 'a')()
         ('^onComplete', function(b, $cb) {
 
             test.ok(true, '^onComplete');
             test.ok(b === 'b', 'b === \'b\'');
 
-            $cb();
+            this.$super($cb);
 
             test.done();
 
