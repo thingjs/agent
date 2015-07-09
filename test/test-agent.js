@@ -1762,29 +1762,29 @@ exports['NoWrite MapReduce'] = function(test) {
 
 exports['xorDistance'] = function(test) {
     test.expect(5);
-
+    
     test.ok(
         $thing.xorDistance('abcdef', 'abcdef') === 0, 
         '$thing.xorDistance(\'abcdef\', \'abcdef\')'
     );
 
     test.ok(
-        $thing.xorDistance('abcdef', 'bbcdef') === 3, 
+        $thing.xorDistance('abcdef', 'bbcdef') === 83, 
         '$thing.xorDistance(\'abcdef\', \'bbcdef\')'
     );
 
     test.ok(
-        $thing.xorDistance('bbcdef', 'abcdef') === 3, 
+        $thing.xorDistance('bbcdef', 'abcdef') === 83, 
         '$thing.xorDistance( \'bbcdef\', \'abcdef\')'
     );
 
     test.ok(
-        $thing.xorDistance('abcdef', 'abc') === 303, 
+        $thing.xorDistance('abcdef', 'abc') === 89, 
         '$thing.xorDistance(\'abcdef\', \'abc\')'
     );
 
     test.ok(
-        $thing.xorDistance('abc', 'abcdef') === 303, 
+        $thing.xorDistance('abc', 'abcdef') === 89, 
         '$thing.xorDistance(\'abc\', \'abcdef\')'
     );
 
@@ -1802,6 +1802,7 @@ exports['General Exceptions'] = function(test) {
 
             if (++i === 1) throw('error');
             else $cb('onComplete')();
+
         }
 
     });
