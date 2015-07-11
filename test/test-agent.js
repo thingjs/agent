@@ -58,6 +58,10 @@ exports['abstract agent'] = function(test) {
 };
 
 exports['behaviour'] = function(test) {
+    var i = 0, 
+        j = 0
+        ;
+
     test.expect(6);
     agent('A', {
         setup: function(cb) {
@@ -65,11 +69,11 @@ exports['behaviour'] = function(test) {
             this.$super(cb);
             this.addBehaviour({
                 action: function($cb) {
-                    test.ok(true, 'action');
+                    if (++i === 1) test.ok(true, 'action');
                     this.$super($cb);
                 },
                 done: function() {
-                    test.ok(true, 'done');
+                    if (++j === 1) test.ok(true, 'done');
                     return true;
                 }
             });
@@ -152,7 +156,6 @@ exports['abstract behaviour'] = function(test) {
         },
         takedown: function(cb) {
             test.ok(false, 'takedown');
-            this.$super(cb);
             test.done();
         }
     });
