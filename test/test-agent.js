@@ -1834,7 +1834,7 @@ exports['General Exceptions'] = function(test) {
 };
 
 exports['Properties'] = function(test) {
-    test.expect(9);
+    test.expect(11);
 
     agent('@passive', 'CP', {
 
@@ -1874,9 +1874,20 @@ exports['Properties'] = function(test) {
 
                 '@property e': {
 
+                    set: function(v) {
+
+                        test.ok(
+                            this.$owner.valueOfC === 'c', 
+                            'this.$owner.valueOfC === \'c\''
+                        );
+
+                        this.$owner.valueOfE = v;
+
+                    },
+
                     get: function() {
 
-                        // TODO: console.log('property e', this.$parent);
+                        return this.$owner.valueOfE;
 
                     }
 
@@ -1884,14 +1895,14 @@ exports['Properties'] = function(test) {
 
                 method: function($cb) {
 
-                    //console.log(this.e);
+                    this.e = 'e';
+
+                    test.ok(this.e === 'e', 'this.e === \'e\'');
 
                     $cb();
                 }
 
             });
-
-            agent(cq)('method')();
 
             test.ok(this.a === 'a', 'this.a === \'a\'');
             test.ok(this.b === 'b', 'this.a === \'b\'');
@@ -1950,6 +1961,8 @@ exports['Properties'] = function(test) {
                 test.ok(true, 'this.d = 1');
 
             }
+
+            agent(cq)('method')();
 
             test.done();
 
@@ -2074,7 +2087,7 @@ exports['Properties get put'] = function(test) {
 exports['Description get'] = function(test) {
     test.expect(1);
 
-    agent('@passive', 'CT', '@author theAuthor', '@description theDesc', '@tag aTag', {
+    agent('@passive', 'CT', '@author The Author', '@description The Desc', '@tag tag1 tag2', {
 
         '@property a': {
             value: 'a'
@@ -2103,6 +2116,8 @@ exports['Description get'] = function(test) {
             this.addBehaviour('CU extends Queue implements Action', '@tag actionTag');
             this.addBehaviour('CV extends Queue implements Event', '@tag eventTag');
 
+            this.addBehaviour('extends Queue implements Event', '@tag nameless and private');
+
         }
 
 
@@ -2114,9 +2129,9 @@ exports['Description get'] = function(test) {
             test.deepEqual(
                 data, {
                     '@meta': {
-                        author: ['theAuthor'],
-                        description: ['theDesc'],
-                        tag: ['aTag']
+                        author: ['The Author'],
+                        description: ['The Desc'],
+                        tag: ['tag1', 'tag2']
                     },
                     '@properties': {
                         'CT#a': { 
