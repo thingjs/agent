@@ -1838,16 +1838,16 @@ exports['Properties'] = function(test) {
 
     agent('@passive', 'CP', {
 
-        '@property a': {
+        'property a': {
             value: 'a'
         },
 
-        '@property b': {
+        'property b': {
             value: 'b',
             writable: true
         },
 
-        '@property c': {
+        'property c': {
 
             get: function() {                
                 return this.valueOfC;
@@ -1859,7 +1859,7 @@ exports['Properties'] = function(test) {
 
         },
 
-        '@property d': {
+        'property d': {
 
             get: function() {                
                 return 'd';
@@ -1872,7 +1872,7 @@ exports['Properties'] = function(test) {
 
             var cq = this.addBehaviour('@passive', 'CQ', {
 
-                '@property e': {
+                'property e': {
 
                     set: function(v) {
 
@@ -1977,16 +1977,16 @@ exports['Properties get put'] = function(test) {
 
     agent('@passive', 'CR', {
 
-        '@property a': {
+        'property a': {
             value: 'a'
         },
 
-        '@property b': {
+        'property b': {
             value: 'b',
             writable: true
         },
 
-        '@property c': {
+        'property c': {
 
             get: function() {
                 return this.valueOfC;
@@ -2003,11 +2003,11 @@ exports['Properties get put'] = function(test) {
 
             this.addBehaviour('@passive', 'CS', {
 
-                '@property d': {
+                'property d': {
                     value: 'd'
                 },
 
-                '@property e': {
+                'property e': {
                     value: 'e',
                     writable: true
                 }
@@ -2089,16 +2089,16 @@ exports['Description get'] = function(test) {
 
     agent('@passive', 'CT', '@author The Author', '@description The Desc', '@tag tag1 tag2', {
 
-        '@property a': {
+        'property a': {
             value: 'a'
         },
 
-        '@property b': {
+        'property b': {
             value: 'b',
             writable: true
         },
 
-        '@property c': {
+        '  property   c  ': {
 
             get: function() {
                 return this.valueOfC;
