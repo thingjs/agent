@@ -271,7 +271,7 @@ exports['implements'] = function(test) {
                 test.ok(true, 'G.method');
                 test.deepEqual(
                     this.getInterfaces(),
-                    ['Agent', this.$id, this.getSource(), 'H', /pattern/g, 'G'], 'getInterfaces() == ["Agent", "H", /pattern/g, "G"]'
+                    ['Agent', 'Description', 'Properties', this.$id, this.getSource(), 'H', /pattern/g, 'G'], 'getInterfaces() == ["Agent", "H", /pattern/g, "G"]'
                 );
                 $cb();
                 
@@ -1830,5 +1830,328 @@ exports['General Exceptions'] = function(test) {
         ('method')()
         ('method')()
         ;
+
+};
+
+exports['Properties'] = function(test) {
+    test.expect(9);
+
+    agent('@passive', 'CP', {
+
+        '@property a': {
+            value: 'a'
+        },
+
+        '@property b': {
+            value: 'b',
+            writable: true
+        },
+
+        '@property c': {
+
+            get: function() {                
+                return this.valueOfC;
+            },
+
+            set: function(v) {
+                this.valueOfC = v;
+            }
+
+        },
+
+        '@property d': {
+
+            get: function() {                
+                return 'd';
+            }
+
+        },
+
+        setup: function(cb) {
+            this.$super(cb);
+
+            var cq = this.addBehaviour('@passive', 'CQ', {
+
+                '@property e': {
+
+                    get: function() {
+
+                        // TODO: console.log('property e', this.$parent);
+
+                    }
+
+                },
+
+                method: function($cb) {
+
+                    //console.log(this.e);
+
+                    $cb();
+                }
+
+            });
+
+            agent(cq)('method')();
+
+            test.ok(this.a === 'a', 'this.a === \'a\'');
+            test.ok(this.b === 'b', 'this.a === \'b\'');
+            test.ok(this.c === undefined, 'this.c === undefined');
+            test.ok(this.d === 'd', 'this.d === \'d\'');
+
+            try {
+
+                this.a = 1;
+            
+                test.ok(false, 'this.a = 1');
+
+            }
+            catch(e) {
+
+                test.ok(true, 'this.a = 1');
+
+            }
+
+            try {
+
+                this.b = 1;
+            
+                test.ok(true, 'this.b = 1');
+
+            }
+            catch(e) {
+
+                test.ok(false, 'this.b = 1');
+
+            }
+
+            try {
+
+                this.c = 'c';
+            
+                test.ok(true, 'this.c = \'c\'');
+                test.ok(this.c === 'c', 'this.c === \'c\'');
+
+            }
+            catch(e) {
+
+                test.ok(false, 'this.c = \'c\'');
+
+            }
+
+            try {
+
+                this.d = 1;
+            
+                test.ok(false, 'this.d = 1');
+
+            }
+            catch(e) {
+
+                test.ok(true, 'this.d = 1');
+
+            }
+
+            test.done();
+
+        }
+
+    });
+
+}; 
+
+exports['Properties get put'] = function(test) {
+    test.expect(17);
+
+    agent('@passive', 'CR', {
+
+        '@property a': {
+            value: 'a'
+        },
+
+        '@property b': {
+            value: 'b',
+            writable: true
+        },
+
+        '@property c': {
+
+            get: function() {
+                return this.valueOfC;
+            },
+
+            set: function(v) {
+                this.valueOfC = v;
+            }
+
+        },
+
+        setup: function(cb) {
+            this.$super(cb);
+
+            this.addBehaviour('@passive', 'CS', {
+
+                '@property d': {
+                    value: 'd'
+                },
+
+                '@property e': {
+                    value: 'e',
+                    writable: true
+                }
+
+            });
+
+        }
+
+    });
+
+    agent('@select Properties CR')
+        ('^onComplete', function($cb) {
+        
+            test.ok(true, 'onComplete');
+
+            $cb();
+        
+        })
+        ('^onError', function(err, $cb) {
+
+            test.ok(false, err);
+
+            $cb();
+        
+        })
+        ('^data', function(data, $cb) {
+            
+            test.ok(data['CR#a'] === 'a', '(data[\'CR#a\'] === \'a\'');
+            test.ok(data['CR#b'] === 'b', '(data[\'CR#b\'] === \'b\'');
+            test.ok(data['CR#c'] === undefined, '(data[\'CR#c\'] === undefined');
+            test.ok(data['CS#d'] === 'd', '(data[\'CS#d\'] === \'d\'');
+            test.ok(data['CS#e'] === 'e', '(data[\'CS#e\'] === \'e\'');
+
+            $cb();
+
+        })
+        ('get')()
+        ('put', {'CR#b': 2, 'CR#c': 3, 'CS#e': 5})()
+        ('^data', function(data, $cb) {
+
+            test.ok(data['CR#a'] === 'a', '(data[\'CR#a\'] === \'a\'');
+            test.ok(data['CR#b'] === 2, '(data[\'CR#b\'] === 2');
+            test.ok(data['CR#c'] === 3, '(data[\'CR#c\'] === 3');
+            test.ok(data['CS#d'] === 'd', '(data[\'CS#d\'] === \'d\'');
+            test.ok(data['CS#e'] === 5, '(data[\'CS#e\'] === 5');
+
+            $cb();
+
+        })
+        ('get')()
+        ('^onError', function(err, $cb) {
+
+            test.ok(true, err);
+
+            $cb();
+        
+        })
+        ('put', {'CR#a': 4, 'CR#b': 5, 'CR#c': 6})()
+        ('put', {'CR#c': 6})()
+        ('patch', {'CR#c': 6})()
+        ('^data', function(data, $cb) {
+
+            test.ok(data['CR#a'] === 'a', '(data[\'CR#a\'] === \'a\'');
+            test.ok(data['CR#b'] === 2, '(data[\'CR#b\'] === 2');
+            test.ok(data['CR#c'] === 6, '(data[\'CR#c\'] === 6');
+
+            $cb();
+
+        })
+        ('get')()
+        ;
+
+    test.done();
+
+};
+
+exports['Description get'] = function(test) {
+    test.expect(1);
+
+    agent('@passive', 'CT', '@author theAuthor', '@description theDesc', '@tag aTag', {
+
+        '@property a': {
+            value: 'a'
+        },
+
+        '@property b': {
+            value: 'b',
+            writable: true
+        },
+
+        '@property c': {
+
+            get: function() {
+                return this.valueOfC;
+            },
+
+            set: function(v) {
+                this.valueOfC = v;
+            }
+
+        },
+
+        setup: function(cb) {
+            this.$super(cb);
+
+            this.addBehaviour('CU extends Queue implements Action', '@tag actionTag');
+            this.addBehaviour('CV extends Queue implements Event', '@tag eventTag');
+
+        }
+
+
+    });
+
+    agent('@select Description CT')
+        ('^data', function(data, $cb) {
+            
+            test.deepEqual(
+                data, {
+                    '@meta': {
+                        author: ['theAuthor'],
+                        description: ['theDesc'],
+                        tag: ['aTag']
+                    },
+                    '@properties': {
+                        'CT#a': { 
+                            'writable': false 
+                        },
+                        'CT#b': { 
+                            'writable': true 
+                        },
+                        'CT#c': { 
+                            'writable': true 
+                        }
+                    },
+                    '@actions': {
+                        'CU': { 
+                            '@meta': {
+                                'tag': ['actionTag']
+                            } 
+                        }
+                    },
+                    '@events': {
+                        'CV': { 
+                            '@meta': {
+                                'tag': ['eventTag']
+                            } 
+                        }
+                    }              
+                }
+            );
+
+            $cb();
+
+        })
+        ('get')()
+        ;
+
+    test.done();
 
 };
