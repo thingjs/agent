@@ -1522,8 +1522,8 @@ exports['Ontology @context'] = function(test) {
                 'b[\'http://colours/blue2\'] === \'#0000FE\''
             );
 
-            test.ok(c.name === 'messageC', 'c.name === \'messageC\'');
-            test.ok(c.red1 === '#FF0000', 'c.red1 === \'#FF0000\'');
+            test.ok(c.name === undefined, 'c.name === undefined');
+            test.ok(c.red === '#FF0000', 'c.red === \'#FF0000\'');
 
             test.ok(
                 typeof d[0]['@context'] === 'object', 
@@ -1563,7 +1563,7 @@ exports['Ontology @context'] = function(test) {
         },
         messageC = {
             name: 'messageC',
-            red1: '#FF0000'
+            'http://colours/red1': '#FF0000'
         }
         ;
 
@@ -1972,18 +1972,21 @@ exports['Properties'] = function(test) {
 
 }; 
 
-exports['Properties get put'] = function(test) {
-    test.expect(17);
+exports['Properties put'] = function(test) {
+    test.expect(8);
 
-    agent('@passive', 'CR', {
+    agent('@passive', 'http://www.test.com/cr/', {
+
+        'sch': 'http://schema.org/',
 
         'property a': {
             value: 'a'
         },
 
         'property b': {
+            '@type': 'sch:b',
+            writable: true,
             value: 'b',
-            writable: true
         },
 
         'property c': {
@@ -2001,15 +2004,16 @@ exports['Properties get put'] = function(test) {
         setup: function(cb) {
             this.$super(cb);
 
-            this.addBehaviour('@passive', 'CS', {
+            this.addBehaviour('@passive', 'http://www.test.com/cr/cs/', {
 
                 'property d': {
                     value: 'd'
                 },
 
                 'property e': {
-                    value: 'e',
-                    writable: true
+                    '@type': 'sch:e',
+                    writable: true,
+                    value: 'e'
                 }
 
             });
@@ -2018,87 +2022,150 @@ exports['Properties get put'] = function(test) {
 
     });
 
-    agent('@select Properties CR')
+    agent('@select Properties http://www.test.com/cr/')
+        
         ('^onComplete', function($cb) {
-        
-            test.ok(true, 'onComplete');
 
+            agent('@select Properties http://www.test.com/cr/')
+                ('get')({
+
+                    'schema': 'http://schema.org/',
+
+                    'cr': 'http://www.test.com/cr/',
+                    'cs': 'cr:cs/',
+
+                    'cr:b': {
+                        '@type': 'schema:b'
+                    },
+
+                    'cs:e': {
+                        '@type': 'schema:e'
+                    },
+
+                    onError: function(err, $cb) {
+
+                        test.ok(false, err);
+
+                        $cb();
+
+                        test.done();
+
+                    },
+
+                    data: function(data, $cb) {
+
+                        test.ok(data['cr:a'] === 'a', '(data[\'cr:a\'] === \'a\'');
+                        test.ok(data['cr:b'] === 2, '(data[\'cr:b\'] === 2');
+                        test.ok(data['cr:c'] === 3, '(data[\'cr:c\'] === 3');
+                        test.ok(data['cs:d'] === 'd', '(data[\'cs:d\'] === \'d\'');
+                        test.ok(data['cs:e'] === 4, '(data[\'cs:e\'] === 4');
+
+                        $cb();
+
+                        test.done();
+
+                    }
+
+                })
+                ;
+                
             $cb();
         
         })
+
         ('^onError', function(err, $cb) {
-
-            test.ok(false, err);
-
-            $cb();
-        
-        })
-        ('^data', function(data, $cb) {
             
-            test.ok(data['CR#a'] === 'a', '(data[\'CR#a\'] === \'a\'');
-            test.ok(data['CR#b'] === 'b', '(data[\'CR#b\'] === \'b\'');
-            test.ok(data['CR#c'] === undefined, '(data[\'CR#c\'] === undefined');
-            test.ok(data['CS#d'] === 'd', '(data[\'CS#d\'] === \'d\'');
-            test.ok(data['CS#e'] === 'e', '(data[\'CS#e\'] === \'e\'');
-
-            $cb();
-
-        })
-        ('get')()
-        ('put', {'CR#b': 2, 'CR#c': 3, 'CS#e': 5})()
-        ('^data', function(data, $cb) {
-
-            test.ok(data['CR#a'] === 'a', '(data[\'CR#a\'] === \'a\'');
-            test.ok(data['CR#b'] === 2, '(data[\'CR#b\'] === 2');
-            test.ok(data['CR#c'] === 3, '(data[\'CR#c\'] === 3');
-            test.ok(data['CS#d'] === 'd', '(data[\'CS#d\'] === \'d\'');
-            test.ok(data['CS#e'] === 5, '(data[\'CS#e\'] === 5');
-
-            $cb();
-
-        })
-        ('get')()
-        ('^onError', function(err, $cb) {
-
             test.ok(true, err);
 
             $cb();
         
         })
-        ('put', {'CR#a': 4, 'CR#b': 5, 'CR#c': 6})()
-        ('put', {'CR#c': 6})()
-        ('patch', {'CR#c': 6})()
-        ('^data', function(data, $cb) {
 
-            test.ok(data['CR#a'] === 'a', '(data[\'CR#a\'] === \'a\'');
-            test.ok(data['CR#b'] === 2, '(data[\'CR#b\'] === 2');
-            test.ok(data['CR#c'] === 6, '(data[\'CR#c\'] === 6');
+        ('put', {
+
+            // not writable
+
+            'http://www.test.com/cr/a': 'x' 
+
+        })()
+
+        ('put', {
+
+            // missing properties
+
+            'http://www.test.com/cr/b': {
+                '@type': 'http://schema.org/b',
+                '@value': 'x'
+            }
+
+        })()
+
+        ('put', {
+
+            'http://www.test.com/cr/b': {
+                '@type': 'http://schema.org/b',
+                '@value': 'x'
+            },
+
+            'http://www.test.com/cr/c': 'x',
+
+            // type mismatch
+
+            'http://www.test.com/cr/cs/e': {
+                '@type': 'http://schema.org/x',
+                '@value': 'x'                
+            }
+
+        })()
+
+        ('^onError', function(err, $cb) {
+
+            test.ok(false, err);
 
             $cb();
 
+            test.done();
+        
         })
-        ('get')()
-        ;
 
-    test.done();
+        ('put', {
+            '@context': {
+                'schema': 'http://schema.org/',
+                'cr': 'http://www.test.com/cr/',
+                'cr:b': {
+                    '@type': 'schema:b'
+                },
+                'cr:cs/e': {
+                    '@type': 'schema:e'
+                }
+            },
+            'cr:b': 2,
+            'cr:c': 3,
+            'cr:cs/e': 4
+        })()
+
+        ;
 
 };
 
-exports['Description get'] = function(test) {
-    test.expect(1);
+exports['Properties patch'] = function(test) {
+    test.expect(7);
 
-    agent('@passive', 'CT', '@author The Author', '@description The Desc', '@tag tag1 tag2', {
+    agent('@passive', 'http://www.test.com/da/', {
+
+        'sch': 'http://schema.org/',
 
         'property a': {
             value: 'a'
         },
 
         'property b': {
+            '@type': 'sch:b',
+            writable: true,
             value: 'b',
-            writable: true
         },
 
-        '  property   c  ': {
+        'property c': {
 
             get: function() {
                 return this.valueOfC;
@@ -2113,60 +2180,265 @@ exports['Description get'] = function(test) {
         setup: function(cb) {
             this.$super(cb);
 
-            this.addBehaviour('CU extends Queue implements Action', '@tag actionTag');
-            this.addBehaviour('CV extends Queue implements Event', '@tag eventTag');
+            this.addBehaviour('@passive', 'http://www.test.com/da/db/', {
 
-            this.addBehaviour('extends Queue implements Event', '@tag nameless and private');
+                'property d': {
+                    value: 'd'
+                },
+
+                'property e': {
+                    '@type': 'sch:e',
+                    writable: true,
+                    value: 'e'
+                }
+
+            });
+
+        }
+
+    });
+
+    agent('@select Properties http://www.test.com/da/')
+        
+        ('^onComplete', function($cb) {
+
+            agent('@select Properties http://www.test.com/da/')
+                ('get')({
+
+                    'schema': 'http://schema.org/',
+
+                    'da': 'http://www.test.com/da/',
+                    'db': 'da:db/',
+
+                    'da:b': {
+                        '@type': 'schema:b'
+                    },
+
+                    'db:e': {
+                        '@type': 'schema:e'
+                    },
+
+                    onError: function(err, $cb) {
+
+                        test.ok(false, err);
+
+                        $cb();
+
+                        test.done();
+
+                    },
+
+                    data: function(data, $cb) {
+
+                        test.ok(data['da:a'] === 'a', '(data[\'da:a\'] === \'a\'');
+                        test.ok(data['da:b'] === 'b', '(data[\'da:b\'] === \'b\'');
+                        test.ok(data['da:c'] === 3, '(data[\'da:c\'] === 3');
+                        test.ok(data['db:d'] === 'd', '(data[\'db:d\'] === \'d\'');
+                        test.ok(data['db:e'] === 4, '(data[\'db:e\'] === 4');
+
+                        $cb();
+
+                        test.done();
+
+                    }
+
+                })
+                ;
+                
+            $cb();
+        
+        })
+
+        ('^onError', function(err, $cb) {
+                
+            test.ok(true, err);
+
+            $cb();
+        
+        })
+
+        ('patch', {
+
+            // not writable
+
+            'http://www.test.com/da/a': 'x' 
+
+        })()
+
+        ('patch', {
+
+            'http://www.test.com/da/b': {
+                '@type': 'http://schema.org/b',
+                '@value': 'x'
+            },
+
+            'http://www.test.com/da/c': 'x',
+
+            // type mismatch
+
+            'http://www.test.com/da/db/e': {
+                '@type': 'http://schema.org/x',
+                '@value': 'x'                
+            }
+
+        })()
+
+        ('^onError', function(err, $cb) {
+
+            test.ok(false, err);
+
+            $cb();
+
+            test.done();
+        
+        })
+
+        ('patch', {
+            '@context': {
+                'schema': 'http://schema.org/',
+                'da': 'http://www.test.com/da/',
+                'da:b': {
+                    '@type': 'schema:b'
+                },
+                'da:db/e': {
+                    '@type': 'schema:e'
+                }
+            },
+            // exclude b
+            'da:c': 3,
+            'da:db/e': 4
+        })()
+
+        ;
+
+};
+
+exports['Description get'] = function(test) {
+    test.expect(1);
+
+    agent(
+        'http://www.test.com/ct/', 
+        '@passive',
+        '@author The Author', 
+        '@description The Desc', 
+        '@tag tag1 tag2', {
+
+        'schema': 'http://schema.org/',
+
+        'property a': {
+            value: 'a'
+        },
+
+        'property b': {
+            value: 'b',
+            writable: true
+        },
+
+        '  property   c  ': {
+
+            '@type': 'schema:c',
+
+            get: function() {
+                return this.valueOfC;
+            },
+
+            set: function(v) {
+                this.valueOfC = v;
+            }
+
+        },
+
+        setup: function(cb) {
+            this.$super(cb);
+
+            this.addBehaviour(
+                'http://www.test.com/cu/ extends Queue implements Action', 
+                '@tag actionTag', {
+
+                    'property d': {
+                        '@type': 'schema:d',
+                        value: 'd',
+                        writable: true
+                    }
+
+            });
+
+            this.addBehaviour(
+                'http://www.test.com/cv/ extends Queue implements Event', 
+                '@tag eventTag'
+            );
+
+            this.addBehaviour(
+                'cw extends Queue implements Event', 
+                '@tag nameless and private'
+            );
 
         }
 
 
     });
 
-    agent('@select Description CT')
-        ('^data', function(data, $cb) {
-            
-            test.deepEqual(
-                data, {
-                    '@meta': {
-                        author: ['The Author'],
-                        description: ['The Desc'],
-                        tag: ['tag1', 'tag2']
-                    },
-                    '@properties': {
-                        'CT#a': { 
-                            'writable': false 
-                        },
-                        'CT#b': { 
-                            'writable': true 
-                        },
-                        'CT#c': { 
-                            'writable': true 
-                        }
-                    },
-                    '@actions': {
-                        'CU': { 
-                            '@meta': {
-                                'tag': ['actionTag']
-                            } 
-                        }
-                    },
-                    '@events': {
-                        'CV': { 
-                            '@meta': {
-                                'tag': ['eventTag']
-                            } 
-                        }
-                    }              
-                }
-            );
+    agent('@select Description http://www.test.com/ct/')
+        ('get')({
 
-            $cb();
+            'wot': 'http://thingjs.org/wot/',
+
+            'wot:author': { '@container': '@list' },
+            'wot:description': { '@container': '@list' },
+            'wot:tag': { '@container': '@list' },
+
+            'sch': 'http://schema.org/',
+
+            'ct': 'http://www.test.com/ct/',
+            'cu': 'http://www.test.com/cu/',
+            'cv': 'http://www.test.com/cv/',
+ 
+            data: function(data, $cb) {
+
+                test.deepEqual(
+                    data, {
+
+                        '@id': 'ct:agent',
+                        '@type': 'wot:thing',
+
+                        'wot:author': ['The Author'],
+                        'wot:description': ['The Desc'],
+                        'wot:tag': ['tag1', 'tag2'],
+
+                        '@graph': [ 
+                            
+                            { '@id': 'ct:a', '@type': 'wot:property', 'wot:writable': false },
+                            
+                            { '@id': 'ct:b', '@type': 'wot:property', 'wot:writable': true },
+                            
+                            { '@id': 'ct:c', '@type': 'sch:c', 'wot:writable': true },
+                            
+                            { '@id': 'cu:d', '@type': 'sch:d', 'wot:writable': true },
+                            
+                            { 
+                                '@id': 'cu:behaviour', 
+                                '@type': 'wot:action', 
+                                'wot:tag': ['actionTag'] 
+                            },
+                            
+                            { 
+                                '@id': 'cv:behaviour', 
+                                '@type': 'wot:event', 
+                                'wot:tag': ['eventTag'] 
+                            }
+
+                        ]
+
+                    }
+                );
+
+                $cb();
+
+                test.done();
+
+            }
 
         })
-        ('get')()
         ;
-
-    test.done();
 
 };
