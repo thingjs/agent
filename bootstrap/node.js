@@ -94,6 +94,7 @@ if ($thing.agent === undefined) {
     require('../lib/Object');
     require('../lib/Base');
     require('../lib/Definition');
+    require('../lib/Ontology');
     require('../lib/Delegate');
     require('../lib/Pattern');
     require('../lib/Agent');
