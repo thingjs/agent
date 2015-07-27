@@ -2370,7 +2370,7 @@ exports['Description get'] = function(test) {
 
             this.addBehaviour(
                 'cw extends Queue implements Event', 
-                '@tag nameless and private'
+                '@tag non-iri non-curie and hidden'
             );
 
         }
