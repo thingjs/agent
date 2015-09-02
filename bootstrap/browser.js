@@ -44,11 +44,12 @@ $thing.getMicroTime = function() {
 
 if (!!window.chrome) {
 
-    $thing.getThreadId = function(first) {
+    $thing.getThreadId = function(first, container) {
+
         first = first || 0;
 
-        var j = 0,
-            threadId = [undefined, 'main', 'main'],
+        var threadId = [undefined, container || 'main'],
+            stackTraceLimit = Error.stackTraceLimit,
             prepareStackTrace = Error.prepareStackTrace
             ;
 
@@ -63,26 +64,28 @@ if (!!window.chrome) {
                     ':' + frame[first].getColumnNumber()
                     ;
 
-                for (var i = 1; i < frame.length; i++) {
+                if (container === undefined)
+                    for (var i = 0; i < frame.length - 1; i++)
+                        if (frame[i].getFunctionName() === '$thing.$container') {
 
-                    if (frame[i - 1].getFunctionName() === '$thing.$container') {
+                            threadId[1] = frame[i + 1].getFileName() +
+                                ':' + frame[i + 1].getLineNumber() +
+                                ':' + frame[i + 1].getColumnNumber()
+                                ;
 
-                        threadId[++j] = frame[i].getFileName() +
-                            ':' + frame[i].getLineNumber() +
-                            ':' + frame[i].getColumnNumber()
-                            ;
+                            break;
 
-                        if (j > threadId.length) break;
-
-                    }
-                }
+                        }
 
             }
              
         };
 
+        Error.stackTraceLimit = container ? first + 1 : Infinity;
+
         new Error().stack;
 
+        Error.stackTraceLimit = stackTraceLimit;
         Error.prepareStackTrace = prepareStackTrace;
 
         return threadId;
@@ -112,25 +115,21 @@ else {
         }
     };
 
-    $thing.getThreadId = function(first) {
-        var j = 0,
-            threadId = [undefined, 'main', 'main'],
+    $thing.getThreadId = function(first, container) {
+        var threadId = [undefined, container || 'main'],
             frame = $thing.getBacktrace(first + 1)
             ;
 
         threadId[0] = frame[0];
 
-        for (var i = 1; i < frame.length; i++) {
+        for (var i = 0; i < frame.length - 1; i++) 
+            if (frame[i].indexOf('$container:0:0') > -1) {
 
-            if (frame[i - 1].indexOf('$container:0:0') > -1) {
+                threadId[1] = frame[i + 1];
 
-                threadId[++j] = frame[i];
-
-                if (j > threadId.length) break;
+                break;
 
             }
-
-        }
 
         return threadId;
     };

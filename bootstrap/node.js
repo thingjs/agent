@@ -41,11 +41,12 @@ $thing.getMicroTime = function() {
     return Math.floor(hrTime[0] * 1000000 + hrTime[1] / 1000);
 };
 
-$thing.getThreadId = function(first) {
+$thing.getThreadId = function(first, container) {
+
     first = first || 0;
 
-    var j = 0,
-        threadId = [undefined, 'main', 'main'],
+    var threadId = [undefined, container || 'main'],
+        stackTraceLimit = Error.stackTraceLimit,
         prepareStackTrace = Error.prepareStackTrace
         ;
 
@@ -60,26 +61,28 @@ $thing.getThreadId = function(first) {
                 ':' + frame[first].getColumnNumber()
                 ;
 
-            for (var i = 1; i < frame.length; i++) {
+            if (container === undefined)
+                for (var i = 0; i < frame.length - 1; i++)
+                    if (frame[i].getFunctionName() === '$thing.$container') {
 
-                if (frame[i - 1].getFunctionName() === '$thing.$container') {
+                        threadId[1] = frame[i + 1].getFileName() +
+                            ':' + frame[i + 1].getLineNumber() +
+                            ':' + frame[i + 1].getColumnNumber()
+                            ;
 
-                    threadId[++j] = frame[i].getFileName() +
-                        ':' + frame[i].getLineNumber() +
-                        ':' + frame[i].getColumnNumber()
-                        ;
+                        break;
 
-                    if (j > threadId.length) break;
-
-                }
-            }
+                    }
 
         }
              
     };
 
+    Error.stackTraceLimit = container ? first + 1 : Infinity;
+
     new Error().stack;
 
+    Error.stackTraceLimit = stackTraceLimit;
     Error.prepareStackTrace = prepareStackTrace;
 
     return threadId;

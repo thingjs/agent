@@ -1158,7 +1158,7 @@ exports['container'] = function(test) {
     agent('@passive', 'CD', {});
     agent('extends CD');
 
-    $thing.$container(function() {
+    $thing.$container(function(agent) {
 
         try {
             agent('extends CD');
@@ -1189,7 +1189,7 @@ if (contextify !== undefined) {
         agent('@passive', 'CE', {});
         agent('extends CE');
 
-        $thing.$container(function() {
+        $thing.$container(function(agent) {
             var self = contextify({ agent: agent });
         
             try {
@@ -2379,13 +2379,7 @@ exports['Description get'] = function(test) {
     });
 
     agent('@select Description http://www.test.com/ct/')
-        ('get')({
-
-            'wot': 'http://thingjs.org/wot/',
-
-            'wot:author': { '@container': '@list' },
-            'wot:description': { '@container': '@list' },
-            'wot:tag': { '@container': '@list' },
+        ('get')('get:result', {
 
             'sch': 'http://schema.org/',
 
