@@ -2379,7 +2379,7 @@ exports['Description get'] = function(test) {
     });
 
     agent('@select Description http://www.test.com/ct/')
-        ('get')('get:result', {
+        ('get')({
 
             'sch': 'http://schema.org/',
 
