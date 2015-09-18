@@ -38,8 +38,9 @@ $thing.usePaho = true;
 $thing.async = async;
 $thing.jsonld = jsonld;
 
+$thing.timeInc = 0;
 $thing.getMicroTime = function() {
-    return Date.now() * 1000;
+    return ($thing.timeInc++ % 999) + (Date.now() * 1000);
 };
 
 if (!!window.chrome) {
