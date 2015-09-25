@@ -1,5 +1,23 @@
 History
 =======
+## 0.2.3
+
+* Implemented HRRN Wake Scheduling
+* Implemented Inline Agent Inheritance
+* Implemented General Exception Handling
+* Implemented Micro-Container Framing
+* Implemented Agent and Behaviour Properties
+* Implemented Agent WoT Descriptions
+* Implemented Micro-container Auditing
+* Implemented Oldest, Newest, Furthest and Closest Filters
+* Implemented getContainer Closure
+* Improved Flow Behaviours Referencing
+* Dropped on prefix on standard response method names
+* Dropped Parent of Parent in ThreadId
+* Dropped Automatic import of Parent Micro-Container Delegates
+* Fixed FilterStates Bug
+* Fixed MapReduce Empty Mapping Bug
+
 
 ## 0.2.2
 

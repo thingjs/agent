@@ -7,18 +7,19 @@ Thing.js is an Agent Framework written in JavaScript for building Internet of Th
 ## Features
 
 - Abstractions, Inheritance and Interfaces
-- Annotations and Templates
+- Properties, Annotations and Templates
 - Passivity and Singletons
 - Simple, Series, Parallel, Queue, MapReduce and Waker Primitive Behaviours
-- HRRN Scheduling and Micro-containers
+- HRRN Scheduling, Micro-containers and Auditing
 - Asynchronous Messaging, Selectors and Filters
 - JSON-LD Ontologies and Message Translation
+- WoT Descriptions and Actions
 - MQTT Sensors, Actuators and Bridging
 
 ## Installation
 ##### In the Browser
 ```html
-<script type="text/javascript" src="https://thingjs.github.io/cdn/lib/thingjs-agent-0.2.2-full.min.js"></script>
+<script type="text/javascript" src="https://thingjs.github.io/cdn/lib/thingjs-agent-0.2.3-full.min.js"></script>
 ```
 ##### Node.js
 ```sh
@@ -98,6 +99,61 @@ agent('MyAgent', {
 ('abstract MyObject', { // Agent or Behaviour
     // Abstraction called MyObject
     
+})
+```
+
+### Properties
+```javascript
+agent({
+    
+    // Properties can be defined in Agents or Behaviours
+    
+    'property testPropertyA': { 
+    
+        // JSON-LD type (optional)
+    
+        '@type': 'http://test.com/type', 
+    
+        value: 'propertyValueA'
+    
+    },
+    
+    'property testPropertyB': {
+    
+        set: function(value) {
+        
+            this.testPropertyValueB = value;
+        
+        
+        },
+        
+        get: function() {
+        
+            return this.testPropertyValueB;
+        
+        }
+        
+    },
+    
+    setup: function(cb) {
+        this.$super(cb);    
+    
+        console.log(this.testPropertyA);
+        
+        // outputs: 'propertyValueA'
+        
+        console.log(this.testPropertyB);
+        
+        // outputs: undefined
+        
+        this.testPropertyB = 'testValueB';
+        
+        console.log(this.testPropertyB);
+        
+        // outputs: 'testValueB'
+    
+    }
+
 })
 ```
 
@@ -238,12 +294,12 @@ var string = 'annotation',
 ```javascript
 ('MyObject', { // Agent or Behaviour
 
-    exampleMethod($cb) { 
+    exampleMethod: function($cb) { 
         // Method with Callback Object Argument $cb
         
         console.log('exampleMethod');
         
-        $cb(); // Callback (once per call)
+        $cb(); // Callback
     }
 })
 
@@ -275,7 +331,7 @@ agent('MyObject')
 ```javascript
 ('MyObject', { // Agent or Behaviour
 
-    exampleMethod(meaningOfLife, $cb) { 
+    exampleMethod: function(meaningOfLife, $cb) { 
         // Method with meaningOfLife Argument 
         // and Callback Object Argument $cb
         
@@ -308,7 +364,7 @@ agent('MyObject')
 ```javascript
 ('MyObject', { // Agent or Behaviour
 
-    exampleMethod(meaningOfLife, $cb) { 
+    exampleMethod: function(meaningOfLife, $cb) { 
         
         console.log('exampleMethod');
         console.log(meaningOfLife);
@@ -474,21 +530,42 @@ agent('MyAgent', {
         //          'MyBehaviourC.exampleMethod'
         
         agent('MyBehaviour')
-            .all('exampleMethod')() // All Filter
+            .all('exampleMethod')() // All in order of Response Ratio
             ;
         // Outputs: 'MyBehaviourA.exampleMethod'
         //          'MyBehaviourB.exampleMethod'
         //          'MyBehaviourC.exampleMethod'
        
         agent('MyBehaviour')
-            .first('exampleMethod')() // First Filter
+            .first('exampleMethod')() // First by Response Ratio
             ;
         // Outputs: 'MyBehaviourA.exampleMethod'
 
         agent('MyBehaviour')
-            .last('exampleMethod')() // Last Filter
+            .last('exampleMethod')() // Last by Response Ratio
             ;
         // Outputs: 'MyBehaviourC.exampleMethod'
+        
+        agent('MyBehaviour')
+            .closest('exampleMethod')() // Closest by Xor Distance
+            ;
+        // Outputs: 'MyBehaviourA.exampleMethod'
+        
+         agent('MyBehaviour')
+            .furthest('exampleMethod')() // Furthest by Xor Distance
+            ;
+        // Outputs: 'MyBehaviourC.exampleMethod'
+        
+        agent('MyBehaviour')
+            .newest('exampleMethod')() // Newest by CreationDate
+            ;
+        // Outputs: 'MyBehaviourA.exampleMethod'
+        
+         agent('MyBehaviour')
+            .oldest('exampleMethod')() // Oldest by CreationDate
+            ;
+        // Outputs: 'MyBehaviourC.exampleMethod'
+
 
     }
 });
@@ -839,6 +916,125 @@ agent('MyMapReduce')
     
 // Outputs: [0,2]
 //          [1,3]
+```
+### Micro-Container Framing
+```javascript
+
+$thing.frame(function(container) { // Container Frame
+
+    container(function(agent) { // Container A
+    
+        agent('example')('exampleMethod')(); // etc
+    
+    });
+    
+    container(function(agent) { // Container B
+    
+        agent('example')('exampleMethod')(); // etc
+    
+    });
+
+});
+
+```
+### Micro-Container Auditing
+```javascript
+
+container(function(agent) {
+    
+    console.log(
+        this.audit() // Get Audit Values
+    );
+        
+    // Outputs: 
+        
+    {
+        
+        'source:1:8': { // Select or Delegate Source
+            'created': 123456789, // First created
+            'active': 123456789, // Last active
+            'balance': 0, // Callback nesting
+            'ticks': 100 // Approximate ticks consumed 
+        },
+            
+        'source:7:12': {
+            'created': 234567890,
+            'active': 234567890,
+            'balance': 1,
+            'ticks': 200
+        }
+
+    }
+        
+    
+});
+
+```
+### Agent Descriptions
+```javascript
+
+    agent(
+        'http://test.com/', 
+        '@author The Author', 
+        '@description The Desc', 
+        '@tag tag1 tag2',
+        {
+    
+            'property a': {
+                value: 'a'
+            },
+
+            setup: function(cb) {
+                this.$super(cb);
+            
+            
+                this.addBehaviour(
+                    'http://www.test.com/act/ extends Queue', 
+                    'implements Action', 
+                    '@tag actionTag'
+                );
+                
+            }    
+    
+    
+        }
+    );
+    
+    agent('@select Description http://test.com/')
+        ('^data', function(data, $cb) {
+        
+            console.log(data);
+            
+            // output:
+            // {
+            //      '@id': 'http://test.com/agent',
+            //      '@type': 'wot:thing',
+            //
+            //      'wot:author': ['The Author'],
+            //      'wot:description': ['The Desc'],
+            //      'wot:tag': ['tag1', 'tag2'],
+            //      
+            //      '@graph': [
+            //          { 
+            //              '@id': 'http://test.com/a', 
+            //              '@type': 'wot:property', 
+            //              'wot:writable': false 
+            //                
+            //          },
+            //          { 
+            //              '@id': 'http://test.com/act/behaviour', 
+            //              '@type': 'wot:action', 
+            //              'wot:tag': ['actionTag'] 
+            //          }
+            //      ]
+            // }
+        
+            $cb();
+            
+        })
+        ('get')()
+
+
 ```
 ---
 ## MQTT Usage
